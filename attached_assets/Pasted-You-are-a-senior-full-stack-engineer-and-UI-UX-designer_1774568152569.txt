@@ -1,0 +1,211 @@
+You are a senior full-stack engineer and UI/UX designer. Build a complete production-ready mobile application using React Native (Expo) with TypeScript, following Feature-Sliced Architecture.
+
+App Name: StudentSync
+
+Goal:
+Create a modern, beautiful mobile app for international students in Germany to track work hours with German legal compliance, including daily, weekly, and monthly tracking.
+
+---
+
+TECH STACK:
+
+* React Native (Expo)
+* TypeScript
+* React Navigation
+* TanStack React Query
+* AsyncStorage
+* react-native-toast-message
+* i18n (English + German)
+* Feature-Sliced Architecture
+
+---
+
+CORE FEATURES:
+
+1. WORK ENTRY
+
+* Add work entry with:
+
+  * Job Title (e.g., Cleaner, Software Engineer, Waiter)
+  * Job Type (mini-job / part-time / full-time)
+  * Date
+  * Start Time
+  * End Time
+
+---
+
+2. TIME CALCULATIONS
+
+* Automatically calculate:
+
+  * Daily hours (end - start)
+
+* German Rule:
+
+  * < 4 hours = 0.5 day
+  * ≥ 4 hours = 1 full day
+
+---
+
+3. TRACKING LEVELS
+
+A) DAILY
+
+* Show:
+
+  * Hours worked today
+  * Day type (Half / Full)
+
+B) WEEKLY
+
+* Calculate total hours per week
+* Suggest safe limit (configurable):
+
+  * e.g., 20 hours/week (student safe limit)
+* Show:
+
+  * “You worked 18/20 hours this week”
+
+C) MONTHLY
+
+* Total hours in current month
+* Show trends
+
+D) YEARLY (MOST IMPORTANT)
+
+* Max allowed:
+
+  * 120 full days OR 240 half days
+* Convert all entries into full-day equivalent
+* Show:
+
+  * Total used
+  * Remaining days
+
+---
+
+4. SMART ALERT SYSTEM
+
+* Warning (80% reached):
+
+  * “⚠️ You are close to your legal work limit”
+
+* Danger:
+
+  * “❌ You exceeded the allowed limit”
+
+* Daily reminder:
+
+  * “Don’t forget to add today’s work”
+
+---
+
+5. DASHBOARD (MAIN SCREEN)
+
+Show:
+
+* Today’s hours (highlighted)
+* Weekly progress bar
+* Monthly summary
+* Yearly legal limit tracker
+* Remaining days
+
+Make the design:
+
+* Clean
+* Modern
+* Card-based UI
+* Color indicators:
+
+  * Green = safe
+  * Yellow = warning
+  * Red = limit reached/exceeded
+
+If today’s limit is finished:
+
+* Show RED card:
+
+  * “Today’s work completed”
+  * Strong visual highlight
+
+---
+
+6. UI DESIGN (IMPORTANT)
+
+* Beautiful modern UI
+* Use:
+
+  * Cards
+  * Rounded corners
+  * Shadows
+  * Soft colors
+* Responsive layout
+* Smooth spacing
+
+Screens:
+
+* Dashboard
+* Add Work Screen
+* Work History Screen
+
+---
+
+7. ARCHITECTURE (STRICT)
+
+Use Feature-Sliced Architecture:
+
+/src
+/app
+/pages
+/features
+/work-log
+/entities
+/shared
+
+Each feature must include:
+
+* ui/
+* model/
+* api/
+* types.ts
+
+---
+
+8. STATE MANAGEMENT
+
+* Use React Query
+* Use AsyncStorage for persistence
+
+---
+
+9. EXTRA FEATURES
+
+* Toast:
+
+  * “Work entry added successfully”
+
+* Multi-language:
+
+  * English + German
+
+* Provide dummy sample data
+
+---
+
+10. OUTPUT REQUIREMENTS
+
+* Generate complete folder structure
+* Provide all files with working code
+* App must run with:
+
+  * npm install
+  * npm start
+
+---
+
+IMPORTANT:
+
+* Code must be clean and modular
+* Follow best practices
+* Focus on MVP but production-ready
+* UI must look like a real startup app, not basic layout

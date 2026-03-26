@@ -1,6 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { storageKeys } from "@/shared/config/storageKeys";
-import type { WorkEntry } from "@/entities/work-entry/types";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storageKeys } from '@/shared/config/storageKeys';
+import type { WorkEntry } from '@/entities/work-entry/types';
 
 function safeParse<T>(raw: string | null): T | null {
   if (!raw) return null;
@@ -26,3 +26,7 @@ export async function addWorkEntry(entry: WorkEntry): Promise<void> {
   await setWorkEntries([entry, ...entries]);
 }
 
+export async function deleteWorkEntry(id: string): Promise<void> {
+  const entries = await getWorkEntries();
+  await setWorkEntries(entries.filter(e => e.id !== id));
+}

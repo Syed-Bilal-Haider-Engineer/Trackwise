@@ -1,42 +1,47 @@
-import { View } from "react-native";
-import { Card, Text, useTheme } from "react-native-paper";
+import { View, Text, StyleSheet } from 'react-native';
+import { Colors } from '@/shared/theme/colors';
 
 type Props = {
   title: string;
   value: string;
   subtitle?: string;
-  tone?: "neutral" | "success" | "warning" | "danger";
+  tone?: 'neutral' | 'success' | 'warning' | 'danger';
 };
 
-export function MetricCard({ title, value, subtitle, tone = "neutral" }: Props) {
-  const theme = useTheme();
-
-  const toneColor =
-    tone === "success"
-      ? theme.colors.secondary
-      : tone === "warning"
-        ? theme.colors.tertiary
-        : tone === "danger"
-          ? theme.colors.error
-          : theme.colors.primary;
+export function MetricCard({ title, value, subtitle, tone = 'neutral' }: Props) {
+  const color =
+    tone === 'success' ? Colors.safe :
+    tone === 'warning' ? Colors.warning :
+    tone === 'danger' ? Colors.danger :
+    Colors.primary;
 
   return (
-    <Card style={{ borderRadius: theme.roundness, overflow: "hidden" }}>
-      <View style={{ height: 4, backgroundColor: toneColor }} />
-      <Card.Content style={{ paddingTop: 14 }}>
-        <Text variant="labelLarge" style={{ opacity: 0.75 }}>
-          {title}
-        </Text>
-        <Text variant="headlineMedium" style={{ marginTop: 6 }}>
-          {value}
-        </Text>
-        {subtitle ? (
-          <Text variant="bodyMedium" style={{ marginTop: 6, opacity: 0.7 }}>
-            {subtitle}
-          </Text>
-        ) : null}
-      </Card.Content>
-    </Card>
+    <View style={styles.card}>
+      <View style={[styles.accent, { backgroundColor: color }]} />
+      <View style={styles.body}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={[styles.value, { color }]}>{value}</Text>
+        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+      </View>
+    </View>
   );
 }
 
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    flexDirection: 'row',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  accent: { width: 4 },
+  body: { flex: 1, padding: 16 },
+  title: { fontSize: 13, color: Colors.textSecondary, fontWeight: '600', marginBottom: 4 },
+  value: { fontSize: 22, fontWeight: '800' },
+  subtitle: { fontSize: 12, color: Colors.textMuted, marginTop: 4 },
+});

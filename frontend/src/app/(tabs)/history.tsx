@@ -1,6 +1,2 @@
-import { WorkHistoryPage } from "@/pages/work-history/WorkHistoryPage";
-
-export default function HistoryRoute() {
-  return <WorkHistoryPage />;
-}
-
+import { WorkHistoryPage } from '@/pages/work-history/WorkHistoryPage';
+export default WorkHistoryPage;
