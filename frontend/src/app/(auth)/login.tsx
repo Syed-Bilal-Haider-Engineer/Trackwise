@@ -7,12 +7,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-import { useAuth } from '@/shared/lib/auth';
+// import { useAuth } from '@/shared/lib/auth';
+import { useSignIn } from '@clerk/clerk-expo';
 import { Colors } from '@/shared/theme/colors';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useAuth();
+  // const { login } = useAuth();
+  const { signIn, setActive, isLoaded } = useSignIn();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,17 +22,38 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // const handleLogin = async () => {
+  //   setError('');
+  //   if (!email.trim() || !password.trim()) {
+  //     setError('Please fill in all fields');
+  //     return;
+  //   }
+  //   setLoading(true);
+  //   const result = await login(email, password);
+  //   setLoading(false);
+  //   if (!result.success) setError(result.error ?? 'Login failed');
+  // };
+
   const handleLogin = async () => {
-    setError('');
-    if (!email.trim() || !password.trim()) {
-      setError('Please fill in all fields');
-      return;
-    }
-    setLoading(true);
-    const result = await login(email, password);
+  if (!isLoaded) return;
+  setError('');
+  if (!email.trim() || !password.trim()) {
+    setError('Please fill in all fields');
+    return;
+  }
+  setLoading(true);
+  try {
+    const result = await signIn.create({
+      identifier: email.trim().toLowerCase(),
+      password,
+    });
+    await setActive({ session: result.createdSessionId });
+  } catch (err: any) {
+    setError(err.errors?.[0]?.message || 'Login failed');
+  } finally {
     setLoading(false);
-    if (!result.success) setError(result.error ?? 'Login failed');
-  };
+  }
+};
 
   return (
     <KeyboardAvoidingView

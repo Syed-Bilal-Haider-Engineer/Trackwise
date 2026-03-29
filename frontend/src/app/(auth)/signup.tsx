@@ -7,12 +7,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-import { useAuth } from '@/shared/lib/auth';
+// import { useAuth } from '@/shared/lib/auth';
+import { useSignUp } from '@clerk/clerk-expo';
 import { Colors } from '@/shared/theme/colors';
 
 export default function SignupScreen() {
   const router = useRouter();
-  const { signup } = useAuth();
+  // const { signup } = useAuth();
+  const { signUp, setActive, isLoaded } = useSignUp();
+  const [step, setStep] = useState<'form' | 'verify'>('form');
+  const [code, setCode] = useState('');
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -22,27 +26,193 @@ export default function SignupScreen() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSignup = async () => {
-    setError('');
-    if (!name.trim() || !email.trim() || !password.trim() || !confirmPass.trim()) {
-      setError('Please fill in all fields');
-      return;
-    }
-    if (password !== confirmPass) {
-      setError('Passwords do not match');
-      return;
-    }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-    setLoading(true);
-    const result = await signup(name, email, password);
+  // const handleSignup = async () => {
+  //   setError('');
+  //   if (!name.trim() || !email.trim() || !password.trim() || !confirmPass.trim()) {
+  //     setError('Please fill in all fields');
+  //     return;
+  //   }
+  //   if (password !== confirmPass) {
+  //     setError('Passwords do not match');
+  //     return;
+  //   }
+  //   if (password.length < 6) {
+  //     setError('Password must be at least 6 characters');
+  //     return;
+  //   }
+  //   setLoading(true);
+  //   const result = await signup(name, email, password);
+  //   setLoading(false);
+  //   if (!result.success) setError(result.error ?? 'Sign up failed');
+  // };
+
+const handleSignup = async () => {
+  if (!isLoaded) return;
+  setError('');
+  if (!name.trim() || !email.trim() || !password.trim() || !confirmPass.trim()) {
+    setError('Please fill in all fields');
+    return;
+  }
+  if (password !== confirmPass) {
+    setError('Passwords do not match');
+    return;
+  }
+  setLoading(true);
+  try {
+    // await signUp.create({ emailAddress: email.trim().toLowerCase(), password });
+    await signUp.create({
+  emailAddress: email.trim().toLowerCase(),
+  password,
+  firstName: name.trim().split(' ')[0],
+  lastName: name.trim().split(' ').slice(1).join(' ') || undefined,
+});
+    await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+    setStep('verify');
+  } catch (err: any) {
+    setError(err.errors?.[0]?.message || 'Sign up failed');
+  } finally {
     setLoading(false);
-    if (!result.success) setError(result.error ?? 'Sign up failed');
-  };
+  }
+};
+
+const handleVerify = async () => {
+  if (!isLoaded) return;
+  setError('');
+  setLoading(true);
+  try {
+    const result = await signUp.attemptEmailAddressVerification({ code });
+    await setActive({ session: result.createdSessionId });
+  } catch (err: any) {
+    setError(err.errors?.[0]?.message || 'Invalid code');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
+    // <KeyboardAvoidingView
+    //   style={{ flex: 1, backgroundColor: Colors.background }}
+    //   behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    // >
+    //   <ScrollView
+    //     contentContainerStyle={styles.container}
+    //     keyboardShouldPersistTaps="handled"
+    //     showsVerticalScrollIndicator={false}
+    //   >
+    //     <LinearGradient
+    //       colors={[Colors.gradientStart, Colors.gradientEnd]}
+    //       style={styles.header}
+    //     >
+    //       <TouchableOpacity style={styles.back} onPress={() => router.back()}>
+    //         <Ionicons name="arrow-back" size={22} color="white" />
+    //       </TouchableOpacity>
+    //       <View style={styles.logoWrap}>
+    //         <Ionicons name="briefcase" size={36} color="white" />
+    //       </View>
+    //       <Text style={styles.appName}>TrackWise</Text>
+    //       <Text style={styles.tagline}>Create your account</Text>
+    //     </LinearGradient>
+
+    //     <View style={styles.card}>
+    //       <Text style={styles.title}>Join TrackWise 🚀</Text>
+    //       <Text style={styles.subtitle}>Start tracking your work hours today</Text>
+
+    //       {error ? (
+    //         <View style={styles.errorBox}>
+    //           <Ionicons name="alert-circle-outline" size={16} color={Colors.dangerDark} />
+    //           <Text style={styles.errorText}>{error}</Text>
+    //         </View>
+    //       ) : null}
+
+    //       <View style={styles.field}>
+    //         <Text style={styles.label}>Full Name</Text>
+    //         <View style={styles.inputRow}>
+    //           <Ionicons name="person-outline" size={18} color={Colors.textMuted} />
+    //           <TextInput
+    //             style={styles.input}
+    //             value={name}
+    //             onChangeText={setName}
+    //             placeholder="Ahmed Müller"
+    //             placeholderTextColor={Colors.textMuted}
+    //             autoCapitalize="words"
+    //           />
+    //         </View>
+    //       </View>
+
+    //       <View style={styles.field}>
+    //         <Text style={styles.label}>Email</Text>
+    //         <View style={styles.inputRow}>
+    //           <Ionicons name="mail-outline" size={18} color={Colors.textMuted} />
+    //           <TextInput
+    //             style={styles.input}
+    //             value={email}
+    //             onChangeText={setEmail}
+    //             placeholder="your@email.com"
+    //             placeholderTextColor={Colors.textMuted}
+    //             keyboardType="email-address"
+    //             autoCapitalize="none"
+    //             autoCorrect={false}
+    //           />
+    //         </View>
+    //       </View>
+
+    //       <View style={styles.field}>
+    //         <Text style={styles.label}>Password</Text>
+    //         <View style={styles.inputRow}>
+    //           <Ionicons name="lock-closed-outline" size={18} color={Colors.textMuted} />
+    //           <TextInput
+    //             style={[styles.input, { flex: 1 }]}
+    //             value={password}
+    //             onChangeText={setPassword}
+    //             placeholder="Min. 6 characters"
+    //             placeholderTextColor={Colors.textMuted}
+    //             secureTextEntry={!showPass}
+    //           />
+    //           <TouchableOpacity onPress={() => setShowPass(v => !v)}>
+    //             <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={18} color={Colors.textMuted} />
+    //           </TouchableOpacity>
+    //         </View>
+    //       </View>
+
+    //       <View style={styles.field}>
+    //         <Text style={styles.label}>Confirm Password</Text>
+    //         <View style={styles.inputRow}>
+    //           <Ionicons name="shield-checkmark-outline" size={18} color={Colors.textMuted} />
+    //           <TextInput
+    //             style={styles.input}
+    //             value={confirmPass}
+    //             onChangeText={setConfirmPass}
+    //             placeholder="Repeat password"
+    //             placeholderTextColor={Colors.textMuted}
+    //             secureTextEntry={!showPass}
+    //           />
+    //         </View>
+    //       </View>
+
+    //       <TouchableOpacity
+    //         style={styles.btnWrap}
+    //         onPress={handleSignup}
+    //         disabled={loading}
+    //         activeOpacity={0.85}
+    //       >
+    //         <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.btn}>
+    //           {loading
+    //             ? <ActivityIndicator color="white" />
+    //             : <Text style={styles.btnText}>Create Account</Text>
+    //           }
+    //         </LinearGradient>
+    //       </TouchableOpacity>
+
+    //       <View style={styles.footerRow}>
+    //         <Text style={styles.footerLabel}>Already have an account? </Text>
+    //         <TouchableOpacity onPress={() => router.back()}>
+    //           <Text style={styles.footerLink}>Sign In</Text>
+    //         </TouchableOpacity>
+    //       </View>
+    //     </View>
+    //   </ScrollView>
+    // </KeyboardAvoidingView>
+
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: Colors.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -67,106 +237,137 @@ export default function SignupScreen() {
         </LinearGradient>
 
         <View style={styles.card}>
-          <Text style={styles.title}>Join TrackWise 🚀</Text>
-          <Text style={styles.subtitle}>Start tracking your work hours today</Text>
+          {step === 'verify' ? (
+            <>
+              <Text style={styles.title}>Verify Email ✉️</Text>
+              <Text style={styles.subtitle}>Check your email for a 6-digit code</Text>
 
-          {error ? (
-            <View style={styles.errorBox}>
-              <Ionicons name="alert-circle-outline" size={16} color={Colors.dangerDark} />
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          ) : null}
+              {error ? (
+                <View style={styles.errorBox}>
+                  <Ionicons name="alert-circle-outline" size={16} color={Colors.dangerDark} />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              ) : null}
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Full Name</Text>
-            <View style={styles.inputRow}>
-              <Ionicons name="person-outline" size={18} color={Colors.textMuted} />
-              <TextInput
-                style={styles.input}
-                value={name}
-                onChangeText={setName}
-                placeholder="Ahmed Müller"
-                placeholderTextColor={Colors.textMuted}
-                autoCapitalize="words"
-              />
-            </View>
-          </View>
+              <View style={styles.field}>
+                <Text style={styles.label}>Verification Code</Text>
+                <View style={styles.inputRow}>
+                  <Ionicons name="key-outline" size={18} color={Colors.textMuted} />
+                  <TextInput
+                    style={styles.input}
+                    value={code}
+                    onChangeText={setCode}
+                    placeholder="123456"
+                    placeholderTextColor={Colors.textMuted}
+                    keyboardType="number-pad"
+                  />
+                </View>
+              </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Email</Text>
-            <View style={styles.inputRow}>
-              <Ionicons name="mail-outline" size={18} color={Colors.textMuted} />
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="your@email.com"
-                placeholderTextColor={Colors.textMuted}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.inputRow}>
-              <Ionicons name="lock-closed-outline" size={18} color={Colors.textMuted} />
-              <TextInput
-                style={[styles.input, { flex: 1 }]}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Min. 6 characters"
-                placeholderTextColor={Colors.textMuted}
-                secureTextEntry={!showPass}
-              />
-              <TouchableOpacity onPress={() => setShowPass(v => !v)}>
-                <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={18} color={Colors.textMuted} />
+              <TouchableOpacity style={styles.btnWrap} onPress={handleVerify} disabled={loading} activeOpacity={0.85}>
+                <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.btn}>
+                  {loading ? <ActivityIndicator color="white" /> : <Text style={styles.btnText}>Verify & Continue</Text>}
+                </LinearGradient>
               </TouchableOpacity>
-            </View>
-          </View>
+            </>
+          ) : (
+            <>
+              <Text style={styles.title}>Join TrackWise 🚀</Text>
+              <Text style={styles.subtitle}>Start tracking your work hours today</Text>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Confirm Password</Text>
-            <View style={styles.inputRow}>
-              <Ionicons name="shield-checkmark-outline" size={18} color={Colors.textMuted} />
-              <TextInput
-                style={styles.input}
-                value={confirmPass}
-                onChangeText={setConfirmPass}
-                placeholder="Repeat password"
-                placeholderTextColor={Colors.textMuted}
-                secureTextEntry={!showPass}
-              />
-            </View>
-          </View>
+              {error ? (
+                <View style={styles.errorBox}>
+                  <Ionicons name="alert-circle-outline" size={16} color={Colors.dangerDark} />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              ) : null}
 
-          <TouchableOpacity
-            style={styles.btnWrap}
-            onPress={handleSignup}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.btn}>
-              {loading
-                ? <ActivityIndicator color="white" />
-                : <Text style={styles.btnText}>Create Account</Text>
-              }
-            </LinearGradient>
-          </TouchableOpacity>
+              <View style={styles.field}>
+                <Text style={styles.label}>Full Name</Text>
+                <View style={styles.inputRow}>
+                  <Ionicons name="person-outline" size={18} color={Colors.textMuted} />
+                  <TextInput
+                    style={styles.input}
+                    value={name}
+                    onChangeText={setName}
+                    placeholder="Ahmed Müller"
+                    placeholderTextColor={Colors.textMuted}
+                    autoCapitalize="words"
+                  />
+                </View>
+              </View>
 
-          <View style={styles.footerRow}>
-            <Text style={styles.footerLabel}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.footerLink}>Sign In</Text>
-            </TouchableOpacity>
-          </View>
+              <View style={styles.field}>
+                <Text style={styles.label}>Email</Text>
+                <View style={styles.inputRow}>
+                  <Ionicons name="mail-outline" size={18} color={Colors.textMuted} />
+                  <TextInput
+                    style={styles.input}
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="your@email.com"
+                    placeholderTextColor={Colors.textMuted}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Password</Text>
+                <View style={styles.inputRow}>
+                  <Ionicons name="lock-closed-outline" size={18} color={Colors.textMuted} />
+                  <TextInput
+                    style={[styles.input, { flex: 1 }]}
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Min. 6 characters"
+                    placeholderTextColor={Colors.textMuted}
+                    secureTextEntry={!showPass}
+                  />
+                  <TouchableOpacity onPress={() => setShowPass(v => !v)}>
+                    <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={18} color={Colors.textMuted} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Confirm Password</Text>
+                <View style={styles.inputRow}>
+                  <Ionicons name="shield-checkmark-outline" size={18} color={Colors.textMuted} />
+                  <TextInput
+                    style={styles.input}
+                    value={confirmPass}
+                    onChangeText={setConfirmPass}
+                    placeholder="Repeat password"
+                    placeholderTextColor={Colors.textMuted}
+                    secureTextEntry={!showPass}
+                  />
+                </View>
+              </View>
+
+              <TouchableOpacity style={styles.btnWrap} onPress={handleSignup} disabled={loading} activeOpacity={0.85}>
+                <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.btn}>
+                  {loading ? <ActivityIndicator color="white" /> : <Text style={styles.btnText}>Create Account</Text>}
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <View style={styles.footerRow}>
+                <Text style={styles.footerLabel}>Already have an account? </Text>
+                <TouchableOpacity onPress={() => router.back()}>
+                  <Text style={styles.footerLink}>Sign In</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: { flexGrow: 1, backgroundColor: Colors.background },
