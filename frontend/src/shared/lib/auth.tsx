@@ -119,9 +119,8 @@
 // }
 
 
-
 import { createContext, useContext, PropsWithChildren } from 'react';
-import { useUser, useClerk } from '@clerk/clerk-expo';
+import { useUser, useClerk, useSignIn } from '@clerk/clerk-expo';
 
 export type User = {
   id: string;
@@ -134,6 +133,8 @@ type AuthContextType = {
   isLoading: boolean;
   logout: () => Promise<void>;
   updateProfile: (firstName: string, lastName: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+  resetPassword: (code: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -141,6 +142,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: PropsWithChildren) {
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
+  const { signIn, setActive } = useSignIn();
 
   const mappedUser: User | null = user
     ? {
@@ -158,8 +160,43 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await user?.update({ firstName, lastName });
   };
 
+  const forgotPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      await signIn?.create({
+        strategy: 'reset_password_email_code',
+        identifier: email,
+      });
+      return { success: true };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Failed to send reset code',
+      };
+    }
+  };
+
+  const resetPassword = async (code: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const result = await signIn?.attemptFirstFactor({
+        strategy: 'reset_password_email_code',
+        code,
+        password: newPassword,
+      });
+      if (result?.status === 'complete') {
+        await setActive?.({ session: result.createdSessionId });
+        return { success: true };
+      }
+      return { success: false, error: 'Reset failed, please try again' };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err.errors?.[0]?.longMessage || err.errors?.[0]?.message || 'Failed to reset password',
+      };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user: mappedUser, isLoading: !isLoaded, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user: mappedUser, isLoading: !isLoaded, logout, updateProfile, forgotPassword, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );
