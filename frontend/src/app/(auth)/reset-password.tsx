@@ -311,7 +311,7 @@ export default function ResetPasswordScreen() {
         <View style={styles.card}>
           {done ? (
             <View style={styles.successBox}>
-              <Ionicons name="checkmark-circle" size={72} color={Colors.success ?? '#22c55e'} />
+              <Ionicons name="checkmark-circle" size={72} color='#22c55e' />
               <Text style={styles.successTitle}>Password Reset!</Text>
               <Text style={styles.successText}>Your password has been updated successfully.</Text>
               <TouchableOpacity
