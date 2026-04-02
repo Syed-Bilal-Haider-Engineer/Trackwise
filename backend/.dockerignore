@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+.env
+.git
+.gitignore
+.vscode
+.next
+.prisma
+.env.local
+.env.production
