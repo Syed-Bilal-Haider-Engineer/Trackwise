@@ -121,7 +121,7 @@
 
 
 import { createContext, useContext, PropsWithChildren } from 'react';
-import { useUser, useAuth as useClerkAuth, useClerk } from '@clerk/clerk-expo';
+import { useUser, useClerk } from '@clerk/clerk-expo';
 
 export type User = {
   id: string;
@@ -133,6 +133,7 @@ type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   logout: () => Promise<void>;
+  updateProfile: (firstName: string, lastName: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -153,8 +154,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await signOut();
   };
 
+  const updateProfile = async (firstName: string, lastName: string) => {
+    await user?.update({ firstName, lastName });
+  };
+
   return (
-    <AuthContext.Provider value={{ user: mappedUser, isLoading: !isLoaded, logout }}>
+    <AuthContext.Provider value={{ user: mappedUser, isLoading: !isLoaded, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );
