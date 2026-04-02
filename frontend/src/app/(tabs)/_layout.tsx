@@ -22,7 +22,8 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     <View style={styles.container}>
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
-        const isAdd = route.name === 'work';
+const isAdd = route.name === 'work';
+const isProfile = route.name === 'profile';   // yeh new add ki
         const iconDef = icons[route.name] ?? { active: 'apps', inactive: 'apps-outline' };
 
         const onPress = () => {
@@ -56,6 +57,26 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             </TouchableOpacity>
           );
         }
+
+        if (isProfile) {
+  return (
+    <TouchableOpacity
+      key={route.key}
+      onPress={onPress}
+      style={styles.tab}
+      activeOpacity={0.7}
+    >
+      <Ionicons
+        name={isFocused ? 'person' : 'person-outline'}
+        size={24}
+        color={isFocused ? Colors.tabActive : Colors.tabInactive}
+      />
+      <Text style={[styles.label, { color: isFocused ? Colors.tabActive : Colors.tabInactive }]}>
+        Profile
+      </Text>
+    </TouchableOpacity>
+  );
+}
 
         return (
           <TouchableOpacity
