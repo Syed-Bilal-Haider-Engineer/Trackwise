@@ -175,10 +175,11 @@ import { Colors } from '@/shared/theme/colors';
 function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const labels: Record<string, string> = {
     index: 'Dashboard',
-    work: 'Add',
     history: 'History',
+    work: 'Add',
     documents: 'Docs',
     profile: 'Profile',
+    appointments: 'Calendar',
   };
 
   const icons: Record<string, { active: string; inactive: string }> = {
@@ -187,6 +188,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     history: { active: 'time', inactive: 'time-outline' },
     documents: { active: 'document-text', inactive: 'document-text-outline' },
     profile: { active: 'person', inactive: 'person-outline' },
+    appointments: { active: 'calendar', inactive: 'calendar-outline' },
   };
 
   return (
@@ -278,11 +280,12 @@ export default function TabsLayout() {
       screenOptions={{ headerShown: false }}
     >
       <Tabs.Screen name="index" />
+      <Tabs.Screen name="documents" />
       <Tabs.Screen name="work" />
       <Tabs.Screen name="history" />
-      <Tabs.Screen name="documents" />
       <Tabs.Screen name="profile" />
-    </Tabs>
+      <Tabs.Screen name="appointments" />    
+      </Tabs>
   );
 }
 
