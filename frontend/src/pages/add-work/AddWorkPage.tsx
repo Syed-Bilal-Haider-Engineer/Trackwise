@@ -329,7 +329,6 @@
 
 
 
-
 import { useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
@@ -339,7 +338,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/shared/lib/auth';
-import { Colors } from '@/shared/theme/colors';
+import { useTheme } from '@/shared/theme/ThemeContext';
 import { useDocuments, DOC_TYPES, type DocType, type Document } from '@/shared/lib/useDocuments';
 import { useAppointments, APPOINTMENT_TYPES, type AppointmentType, type Appointment } from '@/shared/lib/useAppointments';
 import { useAddWorkEntry } from '@/features/work-log/model/queries';
@@ -349,15 +348,16 @@ import { isoDate, nowTimeHHmm } from '@/shared/lib/date';
 import type { JobType, WorkEntry } from '@/entities/work-entry/types';
 import Toast from 'react-native-toast-message';
 
-const JOB_TYPES: { value: JobType; label: string; icon: string; color: string }[] = [
-  { value: 'mini-job', label: 'Mini-Job', icon: 'cafe-outline', color: '#8B5CF6' },
-  { value: 'part-time', label: 'Part-Time', icon: 'laptop-outline', color: Colors.primary },
-  { value: 'full-time', label: 'Full-Time', icon: 'business-outline', color: Colors.safe },
+const JOB_TYPES: { value: JobType; label: string; icon: string; color?: string }[] = [
+  { value: 'mini-job', label: 'Mini-Job', icon: 'cafe-outline', color: '#2e6bff' },
+  { value: 'part-time', label: 'Part-Time', icon: 'laptop-outline', color: '#8B5CF6' },
+  { value: 'full-time', label: 'Full-Time', icon: 'business-outline', color: '#22c55e' },
 ];
 
 type ActiveModal = 'none' | 'work' | 'document' | 'appointment';
 
 export function AddWorkPage() {
+  const { colors: Colors } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
   const add = useAddWorkEntry();
@@ -420,8 +420,10 @@ export function AddWorkPage() {
     setActiveModal('none');
   };
 
+  const themedInputRow = { backgroundColor: Colors.card, borderColor: Colors.border };
+
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: Colors.background }]}>
       <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.header}>
         <View style={styles.headerTop}>
           <View>
@@ -436,101 +438,106 @@ export function AddWorkPage() {
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
         {/* Work Entry */}
-        <TouchableOpacity style={styles.hubCard} onPress={() => setActiveModal('work')} activeOpacity={0.85}>
+        <TouchableOpacity style={[styles.hubCard, { backgroundColor: Colors.card }]} onPress={() => setActiveModal('work')} activeOpacity={0.85}>
           <LinearGradient colors={['#2e6bff18', '#7c3aed18']} style={styles.hubGrad}>
             <View style={[styles.hubIcon, { backgroundColor: Colors.primary }]}>
               <Ionicons name="time-outline" size={28} color="white" />
             </View>
             <View style={styles.hubText}>
-              <Text style={styles.hubTitle}>Log Work Hours</Text>
-              <Text style={styles.hubSub}>Record your daily work entry</Text>
+              <Text style={[styles.hubTitle, { color: Colors.text }]}>Log Work Hours</Text>
+              <Text style={[styles.hubSub, { color: Colors.textSecondary }]}>Record your daily work entry</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
           </LinearGradient>
         </TouchableOpacity>
 
         {/* Document */}
-        <TouchableOpacity style={styles.hubCard} onPress={() => setActiveModal('document')} activeOpacity={0.85}>
+        <TouchableOpacity style={[styles.hubCard, { backgroundColor: Colors.card }]} onPress={() => setActiveModal('document')} activeOpacity={0.85}>
           <LinearGradient colors={['#22c55e18', '#06b6d418']} style={styles.hubGrad}>
             <View style={[styles.hubIcon, { backgroundColor: '#22c55e' }]}>
               <Ionicons name="document-text-outline" size={28} color="white" />
             </View>
             <View style={styles.hubText}>
-              <Text style={styles.hubTitle}>Add Document</Text>
-              <Text style={styles.hubSub}>Visa, health card, contracts...</Text>
+              <Text style={[styles.hubTitle, { color: Colors.text }]}>Add Document</Text>
+              <Text style={[styles.hubSub, { color: Colors.textSecondary }]}>Visa, health card, contracts...</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
           </LinearGradient>
         </TouchableOpacity>
 
         {/* Appointment */}
-        <TouchableOpacity style={styles.hubCard} onPress={() => setActiveModal('appointment')} activeOpacity={0.85}>
+        <TouchableOpacity style={[styles.hubCard, { backgroundColor: Colors.card }]} onPress={() => setActiveModal('appointment')} activeOpacity={0.85}>
           <LinearGradient colors={['#f59e0b18', '#ef444418']} style={styles.hubGrad}>
             <View style={[styles.hubIcon, { backgroundColor: '#f59e0b' }]}>
               <Ionicons name="calendar-outline" size={28} color="white" />
             </View>
             <View style={styles.hubText}>
-              <Text style={styles.hubTitle}>Add Appointment</Text>
-              <Text style={styles.hubSub}>Visa, university, doctor...</Text>
+              <Text style={[styles.hubTitle, { color: Colors.text }]}>Add Appointment</Text>
+              <Text style={[styles.hubSub, { color: Colors.textSecondary }]}>Visa, university, doctor...</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
           </LinearGradient>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Work Modal */}
+      {/* ── Work Modal ── */}
       <Modal visible={activeModal === 'work'} animationType="slide" presentationStyle="pageSheet">
-        <View style={styles.modal}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Log Work Hours</Text>
+        <View style={[styles.modal, { backgroundColor: Colors.background }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: Colors.border }]}>
+            <Text style={[styles.modalTitle, { color: Colors.text }]}>Log Work Hours</Text>
             <TouchableOpacity onPress={() => setActiveModal('none')}>
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
           </View>
           <ScrollView contentContainerStyle={styles.modalContent}>
-            <Text style={styles.fieldLabel}>Job Title</Text>
-            <View style={styles.inputRow}>
+            <Text style={[styles.fieldLabel, { color: Colors.text }]}>Job Title</Text>
+            <View style={[styles.inputRow, themedInputRow]}>
               <Ionicons name="briefcase-outline" size={18} color={Colors.textMuted} />
-              <TextInput style={styles.input} value={jobTitle} onChangeText={setJobTitle} placeholder="e.g. Waiter, Developer" placeholderTextColor={Colors.textMuted} autoCapitalize="words" />
+              <TextInput style={[styles.input, { color: Colors.text }]} value={jobTitle} onChangeText={setJobTitle} placeholder="e.g. Waiter, Developer" placeholderTextColor={Colors.textMuted} autoCapitalize="words" />
             </View>
 
-            <Text style={styles.fieldLabel}>Job Type</Text>
+            <Text style={[styles.fieldLabel, { color: Colors.text }]}>Job Type</Text>
             <View style={styles.typeRow}>
               {JOB_TYPES.map(jt => (
-                <TouchableOpacity key={jt.value} style={[styles.typeChip, jobType === jt.value && { backgroundColor: jt.color, borderColor: jt.color }]} onPress={() => setJobType(jt.value)} activeOpacity={0.8}>
+                <TouchableOpacity
+                  key={jt.value}
+                  style={[styles.typeChip, { backgroundColor: Colors.card, borderColor: Colors.border }, jobType === jt.value && { backgroundColor: jt.color, borderColor: jt.color }]}
+                  onPress={() => setJobType(jt.value)}
+                  activeOpacity={0.8}
+                >
                   <Ionicons name={jt.icon as any} size={14} color={jobType === jt.value ? 'white' : Colors.textSecondary} />
-                  <Text style={[styles.typeChipText, jobType === jt.value && { color: 'white' }]}>{jt.label}</Text>
+                  <Text style={[styles.typeChipText, { color: Colors.textSecondary }, jobType === jt.value && { color: 'white' }]}>{jt.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={styles.fieldLabel}>Date</Text>
-            <View style={styles.inputRow}>
+            <Text style={[styles.fieldLabel, { color: Colors.text }]}>Date</Text>
+            <View style={[styles.inputRow, themedInputRow]}>
               <Ionicons name="calendar-outline" size={18} color={Colors.textMuted} />
-              <TextInput style={styles.input} value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} keyboardType="numbers-and-punctuation" />
+              <TextInput style={[styles.input, { color: Colors.text }]} value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} keyboardType="numbers-and-punctuation" />
             </View>
 
             <View style={styles.timeRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>Start Time</Text>
-                <View style={styles.inputRow}>
+                <Text style={[styles.fieldLabel, { color: Colors.text }]}>Start Time</Text>
+                <View style={[styles.inputRow, themedInputRow]}>
                   <Ionicons name="play-outline" size={16} color={Colors.safe} />
-                  <TextInput style={styles.input} value={startTime} onChangeText={setStartTime} placeholder="HH:MM" placeholderTextColor={Colors.textMuted} keyboardType="numbers-and-punctuation" />
+                  <TextInput style={[styles.input, { color: Colors.text }]} value={startTime} onChangeText={setStartTime} placeholder="HH:MM" placeholderTextColor={Colors.textMuted} keyboardType="numbers-and-punctuation" />
                 </View>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>End Time</Text>
-                <View style={styles.inputRow}>
+                <Text style={[styles.fieldLabel, { color: Colors.text }]}>End Time</Text>
+                <View style={[styles.inputRow, themedInputRow]}>
                   <Ionicons name="stop-outline" size={16} color={Colors.danger} />
-                  <TextInput style={styles.input} value={endTime} onChangeText={setEndTime} placeholder="HH:MM" placeholderTextColor={Colors.textMuted} keyboardType="numbers-and-punctuation" />
+                  <TextInput style={[styles.input, { color: Colors.text }]} value={endTime} onChangeText={setEndTime} placeholder="HH:MM" placeholderTextColor={Colors.textMuted} keyboardType="numbers-and-punctuation" />
                 </View>
               </View>
             </View>
 
             {hours > 0 && (
-              <View style={styles.previewCard}>
-                <Text style={styles.previewItem}>⏱ {hours.toFixed(1)}h</Text>
-                <Text style={styles.previewItem}>📅 {dayType === 'full' ? '1.0 Full Day' : '0.5 Half Day'}</Text>
+              <View style={[styles.previewCard, { backgroundColor: Colors.primaryLight }]}>
+                <Text style={[styles.previewItem, { color: Colors.primary }]}>⏱ {hours.toFixed(1)}h</Text>
+                <Text style={[styles.previewItem, { color: Colors.text }]}>📅 {dayType === 'full' ? '1.0 Full Day' : '0.5 Half Day'}</Text>
               </View>
             )}
 
@@ -543,42 +550,47 @@ export function AddWorkPage() {
         </View>
       </Modal>
 
-      {/* Document Modal */}
+      {/* ── Document Modal ── */}
       <Modal visible={activeModal === 'document'} animationType="slide" presentationStyle="pageSheet">
-        <View style={styles.modal}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add Document</Text>
+        <View style={[styles.modal, { backgroundColor: Colors.background }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: Colors.border }]}>
+            <Text style={[styles.modalTitle, { color: Colors.text }]}>Add Document</Text>
             <TouchableOpacity onPress={() => setActiveModal('none')}>
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
           </View>
           <ScrollView contentContainerStyle={styles.modalContent}>
-            <Text style={styles.fieldLabel}>Document Name</Text>
-            <View style={styles.inputRow}>
+            <Text style={[styles.fieldLabel, { color: Colors.text }]}>Document Name</Text>
+            <View style={[styles.inputRow, themedInputRow]}>
               <Ionicons name="document-outline" size={18} color={Colors.textMuted} />
-              <TextInput style={styles.input} value={docName} onChangeText={setDocName} placeholder="e.g. Student Visa" placeholderTextColor={Colors.textMuted} />
+              <TextInput style={[styles.input, { color: Colors.text }]} value={docName} onChangeText={setDocName} placeholder="e.g. Student Visa" placeholderTextColor={Colors.textMuted} />
             </View>
 
-            <Text style={styles.fieldLabel}>Document Type</Text>
+            <Text style={[styles.fieldLabel, { color: Colors.text }]}>Document Type</Text>
             <View style={styles.typeGrid}>
               {DOC_TYPES.map(t => (
-                <TouchableOpacity key={t.value} style={[styles.typeChip, docType === t.value && { backgroundColor: t.color, borderColor: t.color }]} onPress={() => setDocType(t.value)} activeOpacity={0.8}>
+                <TouchableOpacity
+                  key={t.value}
+                  style={[styles.typeChip, { backgroundColor: Colors.card, borderColor: Colors.border }, docType === t.value && { backgroundColor: t.color, borderColor: t.color }]}
+                  onPress={() => setDocType(t.value)}
+                  activeOpacity={0.8}
+                >
                   <Ionicons name={t.icon as any} size={14} color={docType === t.value ? 'white' : Colors.textSecondary} />
-                  <Text style={[styles.typeChipText, docType === t.value && { color: 'white' }]}>{t.label}</Text>
+                  <Text style={[styles.typeChipText, { color: Colors.textSecondary }, docType === t.value && { color: 'white' }]}>{t.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={styles.fieldLabel}>Expiry Date (optional)</Text>
-            <View style={styles.inputRow}>
+            <Text style={[styles.fieldLabel, { color: Colors.text }]}>Expiry Date (optional)</Text>
+            <View style={[styles.inputRow, themedInputRow]}>
               <Ionicons name="calendar-outline" size={18} color={Colors.textMuted} />
-              <TextInput style={styles.input} value={expiryDate} onChangeText={setExpiryDate} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} keyboardType="numbers-and-punctuation" />
+              <TextInput style={[styles.input, { color: Colors.text }]} value={expiryDate} onChangeText={setExpiryDate} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} keyboardType="numbers-and-punctuation" />
             </View>
 
-            <Text style={styles.fieldLabel}>Notes (optional)</Text>
-            <View style={[styles.inputRow, { height: 80, alignItems: 'flex-start', paddingTop: 12 }]}>
+            <Text style={[styles.fieldLabel, { color: Colors.text }]}>Notes (optional)</Text>
+            <View style={[styles.inputRow, themedInputRow, { height: 80, alignItems: 'flex-start', paddingTop: 12 }]}>
               <Ionicons name="create-outline" size={18} color={Colors.textMuted} />
-              <TextInput style={[styles.input, { height: 60 }]} value={docNotes} onChangeText={setDocNotes} placeholder="Any additional notes..." placeholderTextColor={Colors.textMuted} multiline />
+              <TextInput style={[styles.input, { height: 60, color: Colors.text }]} value={docNotes} onChangeText={setDocNotes} placeholder="Any additional notes..." placeholderTextColor={Colors.textMuted} multiline />
             </View>
 
             <TouchableOpacity style={styles.saveWrap} onPress={handleSaveDoc} activeOpacity={0.85}>
@@ -591,54 +603,59 @@ export function AddWorkPage() {
         </View>
       </Modal>
 
-      {/* Appointment Modal */}
+      {/* ── Appointment Modal ── */}
       <Modal visible={activeModal === 'appointment'} animationType="slide" presentationStyle="pageSheet">
-        <View style={styles.modal}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add Appointment</Text>
+        <View style={[styles.modal, { backgroundColor: Colors.background }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: Colors.border }]}>
+            <Text style={[styles.modalTitle, { color: Colors.text }]}>Add Appointment</Text>
             <TouchableOpacity onPress={() => setActiveModal('none')}>
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
           </View>
           <ScrollView contentContainerStyle={styles.modalContent}>
-            <Text style={styles.fieldLabel}>Title</Text>
-            <View style={styles.inputRow}>
+            <Text style={[styles.fieldLabel, { color: Colors.text }]}>Title</Text>
+            <View style={[styles.inputRow, themedInputRow]}>
               <Ionicons name="create-outline" size={18} color={Colors.textMuted} />
-              <TextInput style={styles.input} value={apptTitle} onChangeText={setApptTitle} placeholder="e.g. Visa Appointment" placeholderTextColor={Colors.textMuted} />
+              <TextInput style={[styles.input, { color: Colors.text }]} value={apptTitle} onChangeText={setApptTitle} placeholder="e.g. Visa Appointment" placeholderTextColor={Colors.textMuted} />
             </View>
 
-            <Text style={styles.fieldLabel}>Type</Text>
+            <Text style={[styles.fieldLabel, { color: Colors.text }]}>Type</Text>
             <View style={styles.typeGrid}>
               {APPOINTMENT_TYPES.map(t => (
-                <TouchableOpacity key={t.value} style={[styles.typeChip, apptType === t.value && { backgroundColor: t.color, borderColor: t.color }]} onPress={() => setApptType(t.value)} activeOpacity={0.8}>
+                <TouchableOpacity
+                  key={t.value}
+                  style={[styles.typeChip, { backgroundColor: Colors.card, borderColor: Colors.border }, apptType === t.value && { backgroundColor: t.color, borderColor: t.color }]}
+                  onPress={() => setApptType(t.value)}
+                  activeOpacity={0.8}
+                >
                   <Ionicons name={t.icon as any} size={14} color={apptType === t.value ? 'white' : Colors.textSecondary} />
-                  <Text style={[styles.typeChipText, apptType === t.value && { color: 'white' }]}>{t.label}</Text>
+                  <Text style={[styles.typeChipText, { color: Colors.textSecondary }, apptType === t.value && { color: 'white' }]}>{t.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={styles.fieldLabel}>Date</Text>
-            <View style={styles.inputRow}>
+            <Text style={[styles.fieldLabel, { color: Colors.text }]}>Date</Text>
+            <View style={[styles.inputRow, themedInputRow]}>
               <Ionicons name="calendar-outline" size={18} color={Colors.textMuted} />
-              <TextInput style={styles.input} value={apptDate} onChangeText={setApptDate} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} keyboardType="numbers-and-punctuation" />
+              <TextInput style={[styles.input, { color: Colors.text }]} value={apptDate} onChangeText={setApptDate} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} keyboardType="numbers-and-punctuation" />
             </View>
 
-            <Text style={styles.fieldLabel}>Time (optional)</Text>
-            <View style={styles.inputRow}>
+            <Text style={[styles.fieldLabel, { color: Colors.text }]}>Time (optional)</Text>
+            <View style={[styles.inputRow, themedInputRow]}>
               <Ionicons name="time-outline" size={18} color={Colors.textMuted} />
-              <TextInput style={styles.input} value={apptTime} onChangeText={setApptTime} placeholder="HH:MM" placeholderTextColor={Colors.textMuted} keyboardType="numbers-and-punctuation" />
+              <TextInput style={[styles.input, { color: Colors.text }]} value={apptTime} onChangeText={setApptTime} placeholder="HH:MM" placeholderTextColor={Colors.textMuted} keyboardType="numbers-and-punctuation" />
             </View>
 
-            <Text style={styles.fieldLabel}>Location (optional)</Text>
-            <View style={styles.inputRow}>
+            <Text style={[styles.fieldLabel, { color: Colors.text }]}>Location (optional)</Text>
+            <View style={[styles.inputRow, themedInputRow]}>
               <Ionicons name="location-outline" size={18} color={Colors.textMuted} />
-              <TextInput style={styles.input} value={apptLocation} onChangeText={setApptLocation} placeholder="e.g. Ausländerbehörde Berlin" placeholderTextColor={Colors.textMuted} />
+              <TextInput style={[styles.input, { color: Colors.text }]} value={apptLocation} onChangeText={setApptLocation} placeholder="e.g. Ausländerbehörde Berlin" placeholderTextColor={Colors.textMuted} />
             </View>
 
-            <Text style={styles.fieldLabel}>Notes (optional)</Text>
-            <View style={[styles.inputRow, { height: 80, alignItems: 'flex-start', paddingTop: 12 }]}>
+            <Text style={[styles.fieldLabel, { color: Colors.text }]}>Notes (optional)</Text>
+            <View style={[styles.inputRow, themedInputRow, { height: 80, alignItems: 'flex-start', paddingTop: 12 }]}>
               <Ionicons name="create-outline" size={18} color={Colors.textMuted} />
-              <TextInput style={[styles.input, { height: 60 }]} value={apptNotes} onChangeText={setApptNotes} placeholder="Any additional notes..." placeholderTextColor={Colors.textMuted} multiline />
+              <TextInput style={[styles.input, { height: 60, color: Colors.text }]} value={apptNotes} onChangeText={setApptNotes} placeholder="Any additional notes..." placeholderTextColor={Colors.textMuted} multiline />
             </View>
 
             <TouchableOpacity style={styles.saveWrap} onPress={handleSaveAppt} activeOpacity={0.85}>
@@ -655,7 +672,7 @@ export function AddWorkPage() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.background },
+  root: { flex: 1 },
   header: { paddingTop: Platform.OS === 'web' ? 56 : 54, paddingHorizontal: 20, paddingBottom: 24 },
   headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   headerTitle: { fontSize: 24, fontWeight: '800', color: 'white' },
@@ -668,22 +685,22 @@ const styles = StyleSheet.create({
   hubGrad: { flexDirection: 'row', alignItems: 'center', padding: 20, gap: 16 },
   hubIcon: { width: 56, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   hubText: { flex: 1 },
-  hubTitle: { fontSize: 16, fontWeight: '700', color: Colors.text },
-  hubSub: { fontSize: 13, color: Colors.textSecondary, marginTop: 3 },
-  modal: { flex: 1, backgroundColor: Colors.background },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  modalTitle: { fontSize: 20, fontWeight: '700', color: Colors.text },
+  hubTitle: { fontSize: 16, fontWeight: '700' },
+  hubSub: { fontSize: 13, marginTop: 3 },
+  modal: { flex: 1 },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1 },
+  modalTitle: { fontSize: 20, fontWeight: '700' },
   modalContent: { padding: 20, gap: 8, paddingBottom: 40 },
-  fieldLabel: { fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 6, marginTop: 8 },
-  inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.card, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border, paddingHorizontal: 14, height: 52, gap: 10 },
-  input: { flex: 1, fontSize: 15, color: Colors.text },
+  fieldLabel: { fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 8 },
+  inputRow: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: 1.5, paddingHorizontal: 14, height: 52, gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
+  input: { flex: 1, fontSize: 15 },
   typeRow: { flexDirection: 'row', gap: 8 },
   typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  typeChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.card },
-  typeChipText: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
+  typeChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5 },
+  typeChipText: { fontSize: 12, fontWeight: '600' },
   timeRow: { flexDirection: 'row', gap: 12 },
-  previewCard: { flexDirection: 'row', gap: 16, backgroundColor: Colors.primaryLight, borderRadius: 12, padding: 14, justifyContent: 'center' },
-  previewItem: { fontSize: 15, fontWeight: '700', color: Colors.primary },
+  previewCard: { flexDirection: 'row', gap: 16, borderRadius: 12, padding: 14, justifyContent: 'center' },
+  previewItem: { fontSize: 15, fontWeight: '700' },
   saveWrap: { borderRadius: 14, overflow: 'hidden', marginTop: 8 },
   saveBtn: { height: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   saveBtnText: { fontSize: 16, fontWeight: '700', color: 'white' },

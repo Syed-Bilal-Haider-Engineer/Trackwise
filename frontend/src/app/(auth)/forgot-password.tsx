@@ -208,7 +208,6 @@
 
 
 
-
 import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
@@ -218,9 +217,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/shared/lib/auth';
-import { Colors } from '@/shared/theme/colors';
+import { useTheme } from '@/shared/theme/ThemeContext';
 
 export default function ForgotPasswordScreen() {
+  const { colors: Colors } = useTheme();
   const router = useRouter();
   const { forgotPassword } = useAuth();
   const [email, setEmail] = useState('');
@@ -250,7 +250,7 @@ export default function ForgotPasswordScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={{ flexGrow: 1, backgroundColor: Colors.background }}
         keyboardShouldPersistTaps="handled"
       >
         <LinearGradient
@@ -267,16 +267,16 @@ export default function ForgotPasswordScreen() {
           <Text style={styles.subheading}>We'll send a reset code to your email</Text>
         </LinearGradient>
 
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: Colors.card }]}>
           {sent ? (
             <View style={styles.successBox}>
               <View style={styles.successIcon}>
                 <Ionicons name="mail" size={56} color={Colors.primary} />
               </View>
-              <Text style={styles.successTitle}>Check your email!</Text>
-              <Text style={styles.successText}>
+              <Text style={[styles.successTitle, { color: Colors.text }]}>Check your email!</Text>
+              <Text style={[styles.successText, { color: Colors.textSecondary }]}>
                 We sent a 6-digit reset code to{'\n'}
-                <Text style={styles.emailHighlight}>{email}</Text>
+                <Text style={{ fontWeight: '700', color: Colors.primary }}>{email}</Text>
               </Text>
               <TouchableOpacity
                 style={styles.btnWrap}
@@ -288,29 +288,32 @@ export default function ForgotPasswordScreen() {
                 </LinearGradient>
               </TouchableOpacity>
               <TouchableOpacity style={styles.backLink} onPress={() => setSent(false)}>
-                <Text style={styles.backLinkText}>Didn't receive it? Try again</Text>
+                <Text style={[styles.backLinkText, { color: Colors.primary }]}>Didn't receive it? Try again</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <>
-              <Text style={styles.title}>Reset your password</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, { color: Colors.text }]}>Reset your password</Text>
+              <Text style={[styles.subtitle, { color: Colors.textSecondary }]}>
                 Enter the email address associated with your account and we'll send you a reset code.
               </Text>
 
               {error ? (
-                <View style={styles.errorBox}>
+                <View style={[styles.errorBox, { backgroundColor: Colors.dangerLight }]}>
                   <Ionicons name="alert-circle-outline" size={16} color={Colors.dangerDark} />
-                  <Text style={styles.errorText}>{error}</Text>
+                  <Text style={[styles.errorText, { color: Colors.dangerDark }]}>{error}</Text>
                 </View>
               ) : null}
 
               <View style={styles.field}>
-                <Text style={styles.label}>Email</Text>
-                <View style={styles.inputRow}>
+                <Text style={[styles.label, { color: Colors.text }]}>Email</Text>
+                <View style={[styles.inputRow, {
+                  backgroundColor: Colors.inputBg,
+                  borderColor: Colors.border,
+                }]}>
                   <Ionicons name="mail-outline" size={18} color={Colors.textMuted} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: Colors.text }]}
                     value={email}
                     onChangeText={setEmail}
                     placeholder="your@email.com"
@@ -338,7 +341,7 @@ export default function ForgotPasswordScreen() {
 
               <TouchableOpacity style={styles.backLink} onPress={() => router.back()}>
                 <Ionicons name="arrow-back-outline" size={16} color={Colors.primary} />
-                <Text style={styles.backLinkText}>Back to Sign In</Text>
+                <Text style={[styles.backLinkText, { color: Colors.primary }]}>Back to Sign In</Text>
               </TouchableOpacity>
             </>
           )}
@@ -349,7 +352,6 @@ export default function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: Colors.background },
   header: {
     paddingTop: Platform.OS === 'web' ? 70 : 62,
     paddingBottom: 44,
@@ -357,7 +359,12 @@ const styles = StyleSheet.create({
     gap: 8,
     position: 'relative',
   },
-  back: { position: 'absolute', top: Platform.OS === 'web' ? 70 : 62, left: 20, padding: 4 },
+  back: {
+    position: 'absolute',
+    top: Platform.OS === 'web' ? 70 : 62,
+    left: 20,
+    padding: 4,
+  },
   iconWrap: {
     width: 76, height: 76, borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.2)',
@@ -366,35 +373,31 @@ const styles = StyleSheet.create({
   heading: { fontSize: 24, fontWeight: '800', color: 'white' },
   subheading: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
   card: {
-    backgroundColor: Colors.card,
     borderTopLeftRadius: 28, borderTopRightRadius: 28,
     marginTop: -20, padding: 28, paddingBottom: 50, flex: 1,
   },
-  title: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 8 },
-  subtitle: { fontSize: 14, color: Colors.textSecondary, marginBottom: 24, lineHeight: 20 },
+  title: { fontSize: 22, fontWeight: '700', marginBottom: 8 },
+  subtitle: { fontSize: 14, marginBottom: 24, lineHeight: 20 },
   errorBox: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.dangerLight, borderRadius: 10,
-    padding: 12, marginBottom: 16, gap: 8,
+    borderRadius: 10, padding: 12, marginBottom: 16, gap: 8,
   },
-  errorText: { flex: 1, color: Colors.dangerDark, fontSize: 13 },
+  errorText: { flex: 1, fontSize: 13 },
   field: { marginBottom: 20 },
-  label: { fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 6 },
+  label: { fontSize: 13, fontWeight: '600', marginBottom: 6 },
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.inputBg, borderRadius: 12,
-    borderWidth: 1.5, borderColor: Colors.border,
+    borderRadius: 12, borderWidth: 1.5,
     paddingHorizontal: 14, height: 52, gap: 10,
   },
-  input: { flex: 1, fontSize: 15, color: Colors.text },
+  input: { flex: 1, fontSize: 15 },
   btnWrap: { borderRadius: 14, overflow: 'hidden', marginBottom: 16 },
   btn: { height: 54, alignItems: 'center', justifyContent: 'center' },
   btnText: { fontSize: 16, fontWeight: '700', color: 'white' },
   backLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  backLinkText: { fontSize: 14, color: Colors.primary, fontWeight: '600' },
+  backLinkText: { fontSize: 14, fontWeight: '600' },
   successBox: { alignItems: 'center', paddingTop: 20 },
   successIcon: { marginBottom: 20 },
-  successTitle: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 12 },
-  successText: { fontSize: 15, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
-  emailHighlight: { fontWeight: '700', color: Colors.primary },
+  successTitle: { fontSize: 22, fontWeight: '700', marginBottom: 12 },
+  successText: { fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
 });

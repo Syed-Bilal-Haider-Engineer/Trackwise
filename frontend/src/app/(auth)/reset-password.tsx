@@ -246,11 +246,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/shared/lib/auth';
-import { Colors } from '@/shared/theme/colors';
+// import { Colors } from '@/shared/theme/colors';
+import { useTheme } from '@/shared/theme/ThemeContext';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
   const { resetPassword } = useAuth();
+  const { colors: Colors } = useTheme();
 
   const [code, setCode] = useState('');
   const [newPass, setNewPass] = useState('');
@@ -308,12 +310,12 @@ export default function ResetPasswordScreen() {
           <Text style={styles.subheading}>Enter the code from your email</Text>
         </LinearGradient>
 
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: Colors.card }]}>
           {done ? (
             <View style={styles.successBox}>
               <Ionicons name="checkmark-circle" size={72} color='#22c55e' />
-              <Text style={styles.successTitle}>Password Reset!</Text>
-              <Text style={styles.successText}>Your password has been updated successfully.</Text>
+              <Text style={[styles.successTitle, { color: Colors.text }]}>Password Reset!</Text>
+              <Text style={[styles.successText, { color: Colors.textSecondary }]}>Your password has been updated successfully.</Text>
               <TouchableOpacity
                 style={styles.btnWrap}
                 onPress={() => router.replace('/(auth)/login')}
@@ -326,22 +328,22 @@ export default function ResetPasswordScreen() {
             </View>
           ) : (
             <>
-              <Text style={styles.title}>Set new password</Text>
-              <Text style={styles.subtitle}>Enter the 6-digit code from your email and choose a new password.</Text>
+              <Text style={[styles.title, { color: Colors.text }]}>Set new password</Text>
+              <Text style={[styles.subtitle, { color: Colors.textSecondary }]}>Enter the 6-digit code from your email and choose a new password.</Text>
 
               {error ? (
-                <View style={styles.errorBox}>
+                <View style={[styles.errorBox, { backgroundColor: Colors.dangerLight }]}> 
                   <Ionicons name="alert-circle-outline" size={16} color={Colors.dangerDark} />
-                  <Text style={styles.errorText}>{error}</Text>
+                  <Text style={[styles.errorText, { color: Colors.dangerDark }]}>{error}</Text>
                 </View>
               ) : null}
 
               <View style={styles.field}>
                 <Text style={styles.label}>Reset Code</Text>
-                <View style={styles.inputRow}>
+                <View style={[styles.inputRow, { backgroundColor: Colors.inputBg, borderColor: Colors.border }] }>
                   <Ionicons name="keypad-outline" size={18} color={Colors.textMuted} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: Colors.text }]}
                     value={code}
                     onChangeText={setCode}
                     placeholder="6-digit code"
@@ -354,10 +356,10 @@ export default function ResetPasswordScreen() {
 
               <View style={styles.field}>
                 <Text style={styles.label}>New Password</Text>
-                <View style={styles.inputRow}>
+                <View style={[styles.inputRow, { backgroundColor: Colors.inputBg, borderColor: Colors.border }] }>
                   <Ionicons name="lock-closed-outline" size={18} color={Colors.textMuted} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: Colors.text }]}
                     value={newPass}
                     onChangeText={setNewPass}
                     placeholder="Min. 8 characters"
@@ -372,10 +374,10 @@ export default function ResetPasswordScreen() {
 
               <View style={styles.field}>
                 <Text style={styles.label}>Confirm New Password</Text>
-                <View style={styles.inputRow}>
+                <View style={[styles.inputRow, { backgroundColor: Colors.inputBg, borderColor: Colors.border }] }>
                   <Ionicons name="shield-checkmark-outline" size={18} color={Colors.textMuted} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: Colors.text }]}
                     value={confirmPass}
                     onChangeText={setConfirmPass}
                     placeholder="Repeat new password"
@@ -410,7 +412,7 @@ export default function ResetPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: Colors.background },
+  container: { flexGrow: 1 },
   header: {
     paddingTop: Platform.OS === 'web' ? 70 : 62,
     paddingBottom: 44,
@@ -427,33 +429,30 @@ const styles = StyleSheet.create({
   heading: { fontSize: 24, fontWeight: '800', color: 'white' },
   subheading: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
   card: {
-    backgroundColor: Colors.card,
     borderTopLeftRadius: 28, borderTopRightRadius: 28,
     marginTop: -20, padding: 28, paddingBottom: 50, flex: 1,
   },
-  title: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 6 },
-  subtitle: { fontSize: 14, color: Colors.textSecondary, marginBottom: 24, lineHeight: 20 },
+  title: { fontSize: 22, fontWeight: '700', marginBottom: 6 },
+  subtitle: { fontSize: 14, marginBottom: 24, lineHeight: 20 },
   errorBox: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.dangerLight, borderRadius: 10,
-    padding: 12, marginBottom: 16, gap: 8,
+    borderRadius: 10, padding: 12, marginBottom: 16, gap: 8,
   },
-  errorText: { flex: 1, color: Colors.dangerDark, fontSize: 13 },
+  errorText: { flex: 1, fontSize: 13 },
   field: { marginBottom: 14 },
-  label: { fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 6 },
+  label: { fontSize: 13, fontWeight: '600', marginBottom: 6 },
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.inputBg, borderRadius: 12,
-    borderWidth: 1.5, borderColor: Colors.border,
+    borderRadius: 12, borderWidth: 1.5,
     paddingHorizontal: 14, height: 52, gap: 10,
   },
-  input: { flex: 1, fontSize: 15, color: Colors.text },
+  input: { flex: 1, fontSize: 15 },
   btnWrap: { borderRadius: 14, overflow: 'hidden', marginTop: 8, marginBottom: 16 },
   btn: { height: 54, alignItems: 'center', justifyContent: 'center' },
   btnText: { fontSize: 16, fontWeight: '700', color: 'white' },
   successBox: { alignItems: 'center', paddingTop: 40, gap: 16 },
-  successTitle: { fontSize: 24, fontWeight: '700', color: Colors.text },
-  successText: { fontSize: 15, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: 16 },
+  successTitle: { fontSize: 24, fontWeight: '700' },
+  successText: { fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 16 },
 });
 
 

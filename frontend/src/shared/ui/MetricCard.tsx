@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors } from '@/shared/theme/colors';
+// import { Colors } from '@/shared/theme/colors';
+import { useTheme } from '@/shared/theme/ThemeContext';
 
 type Props = {
   title: string;

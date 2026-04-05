@@ -6,7 +6,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/shared/lib/auth';
-import { Colors } from '@/shared/theme/colors';
+import { useTheme } from '@/shared/theme/ThemeContext';
 
 type AppointmentType = 'visa' | 'university' | 'doctor' | 'job' | 'government' | 'other';
 
@@ -51,6 +51,7 @@ const URGENCY_COLORS = {
 
 export function AppointmentsPage() {
     const { user } = useAuth();
+    const { colors: Colors } = useTheme();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -114,7 +115,7 @@ export function AppointmentsPage() {
         const urgencyColor = URGENCY_COLORS[urgency];
 
         return (
-            <View key={appt.id} style={styles.apptCard}>
+            <View key={appt.id} style={[styles.apptCard, { backgroundColor: Colors.card }]}>
                 <View style={[styles.apptAccent, { backgroundColor: typeInfo.color }]} />
                 <View style={styles.apptBody}>
                     <View style={styles.apptTop}>
@@ -122,25 +123,25 @@ export function AppointmentsPage() {
                             <Ionicons name={typeInfo.icon as any} size={20} color={typeInfo.color} />
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.apptTitle}>{appt.title}</Text>
-                            <Text style={styles.apptType}>{typeInfo.label}</Text>
+                            <Text style={[styles.apptTitle, { color: Colors.text }]}>{appt.title}</Text>
+                            <Text style={[styles.apptType, { color: Colors.textMuted }]}>{typeInfo.label}</Text>
                         </View>
-                        <TouchableOpacity onPress={() => handleDelete(appt.id)} style={styles.deleteBtn}>
+                        <TouchableOpacity onPress={() => handleDelete(appt.id)} style={[styles.deleteBtn, { backgroundColor: Colors.dangerLight }]}>
                             <Ionicons name="trash-outline" size={16} color={Colors.danger} />
                         </TouchableOpacity>
                     </View>
 
-                    <View style={styles.apptDivider} />
+                    <View style={[styles.apptDivider, { backgroundColor: Colors.border }]} />
 
                     <View style={styles.apptBottom}>
                         <View style={styles.apptInfoRow}>
                             <Ionicons name="calendar-outline" size={14} color={Colors.textMuted} />
-                            <Text style={styles.apptInfo}>{appt.date}{appt.time ? ` · ${appt.time}` : ''}</Text>
+                            <Text style={[styles.apptInfo, { color: Colors.textSecondary }]}>{appt.date}{appt.time ? ` · ${appt.time}` : ''}</Text>
                         </View>
                         {appt.location ? (
                             <View style={styles.apptInfoRow}>
                                 <Ionicons name="location-outline" size={14} color={Colors.textMuted} />
-                                <Text style={styles.apptInfo}>{appt.location}</Text>
+                                <Text style={[styles.apptInfo, { color: Colors.textSecondary }]}>{appt.location}</Text>
                             </View>
                         ) : null}
                         <View style={styles.apptBadgeRow}>
@@ -148,7 +149,7 @@ export function AppointmentsPage() {
                                 <Text style={[styles.urgencyText, { color: urgencyColor.text }]}>{urgencyColor.label}</Text>
                             </View>
                         </View>
-                        {appt.notes ? <Text style={styles.apptNotes}>{appt.notes}</Text> : null}
+                        {appt.notes ? <Text style={[styles.apptNotes, { color: Colors.textSecondary }]}>{appt.notes}</Text> : null}
                     </View>
                 </View>
             </View>
@@ -156,7 +157,7 @@ export function AppointmentsPage() {
     };
 
     return (
-        <View style={styles.root}>
+        <View style={[styles.root, { backgroundColor: Colors.background }]}>
             <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.header}>
                 <View style={styles.headerTop}>
                     <View>
@@ -180,23 +181,23 @@ export function AppointmentsPage() {
 
                 {appointments.length === 0 ? (
                     <View style={styles.emptyState}>
-                        <View style={styles.emptyIcon}>
+                        <View style={[styles.emptyIcon, { backgroundColor: Colors.card }]}>
                             <Ionicons name="calendar-outline" size={48} color={Colors.textMuted} />
                         </View>
-                        <Text style={styles.emptyTitle}>No appointments yet</Text>
-                        <Text style={styles.emptyText}>Add visa appointments, university meetings, and more.</Text>
+                        <Text style={[styles.emptyTitle, { color: Colors.text }]}>No appointments yet</Text>
+                        <Text style={[styles.emptyText, { color: Colors.textSecondary }]}>Add visa appointments, university meetings, and more.</Text>
                     </View>
                 ) : (
                     <>
                         {upcoming.length > 0 && (
                             <>
-                                <Text style={styles.sectionTitle}>Upcoming</Text>
+                                <Text style={[styles.sectionTitle, { color: Colors.textMuted }]}>Upcoming</Text>
                                 {upcoming.map(renderCard)}
                             </>
                         )}
                         {past.length > 0 && (
                             <>
-                                <Text style={styles.sectionTitle}>Past</Text>
+                                <Text style={[styles.sectionTitle, { color: Colors.textMuted }]}>Past</Text>
                                 {past.map(renderCard)}
                             </>
                         )}
@@ -205,20 +206,20 @@ export function AppointmentsPage() {
             </ScrollView>
 
             <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
-                <View style={styles.modal}>
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Add Appointment</Text>
+                <View style={[styles.modal, { backgroundColor: Colors.background }]}>
+                    <View style={[styles.modalHeader, { borderBottomColor: Colors.border }]}>
+                        <Text style={[styles.modalTitle, { color: Colors.text }]}>Add Appointment</Text>
                         <TouchableOpacity onPress={() => setModalVisible(false)}>
                             <Ionicons name="close" size={24} color={Colors.text} />
                         </TouchableOpacity>
                     </View>
 
                     <ScrollView contentContainerStyle={styles.modalContent}>
-                        <Text style={styles.fieldLabel}>Title</Text>
-                        <View style={styles.inputRow}>
+                        <Text style={[styles.fieldLabel, { color: Colors.text }]}>Title</Text>
+                        <View style={[styles.inputRow, { backgroundColor: Colors.card, borderColor: Colors.border }]}>
                             <Ionicons name="create-outline" size={18} color={Colors.textMuted} />
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { color: Colors.text }]}
                                 value={title}
                                 onChangeText={setTitle}
                                 placeholder="e.g. Visa Appointment"
@@ -226,26 +227,26 @@ export function AppointmentsPage() {
                             />
                         </View>
 
-                        <Text style={styles.fieldLabel}>Type</Text>
+                        <Text style={[styles.fieldLabel, { color: Colors.text }]}>Type</Text>
                         <View style={styles.typeGrid}>
                             {APPOINTMENT_TYPES.map(t => (
                                 <TouchableOpacity
                                     key={t.value}
-                                    style={[styles.typeChip, apptType === t.value && { backgroundColor: t.color, borderColor: t.color }]}
+                                    style={[styles.typeChip, { borderColor: Colors.border, backgroundColor: Colors.card }, apptType === t.value && { backgroundColor: t.color, borderColor: t.color }]}
                                     onPress={() => setApptType(t.value)}
                                     activeOpacity={0.8}
                                 >
                                     <Ionicons name={t.icon as any} size={14} color={apptType === t.value ? 'white' : Colors.textSecondary} />
-                                    <Text style={[styles.typeChipText, apptType === t.value && { color: 'white' }]}>{t.label}</Text>
+                                    <Text style={[styles.typeChipText, { color: Colors.textSecondary }, apptType === t.value && { color: 'white' }]}>{t.label}</Text>
                                 </TouchableOpacity>
                             ))}
                         </View>
 
-                        <Text style={styles.fieldLabel}>Date</Text>
-                        <View style={styles.inputRow}>
+                        <Text style={[styles.fieldLabel, { color: Colors.text }]}>Date</Text>
+                        <View style={[styles.inputRow, { backgroundColor: Colors.card, borderColor: Colors.border }]}>
                             <Ionicons name="calendar-outline" size={18} color={Colors.textMuted} />
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { color: Colors.text }]}
                                 value={date}
                                 onChangeText={setDate}
                                 placeholder="YYYY-MM-DD"
@@ -254,11 +255,11 @@ export function AppointmentsPage() {
                             />
                         </View>
 
-                        <Text style={styles.fieldLabel}>Time (optional)</Text>
-                        <View style={styles.inputRow}>
+                        <Text style={[styles.fieldLabel, { color: Colors.text }]}>Time (optional)</Text>
+                        <View style={[styles.inputRow, { backgroundColor: Colors.card, borderColor: Colors.border }]}>
                             <Ionicons name="time-outline" size={18} color={Colors.textMuted} />
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { color: Colors.text }]}
                                 value={time}
                                 onChangeText={setTime}
                                 placeholder="HH:MM"
@@ -267,11 +268,11 @@ export function AppointmentsPage() {
                             />
                         </View>
 
-                        <Text style={styles.fieldLabel}>Location (optional)</Text>
-                        <View style={styles.inputRow}>
+                        <Text style={[styles.fieldLabel, { color: Colors.text }]}>Location (optional)</Text>
+                        <View style={[styles.inputRow, { backgroundColor: Colors.card, borderColor: Colors.border }]}>
                             <Ionicons name="location-outline" size={18} color={Colors.textMuted} />
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { color: Colors.text }]}
                                 value={location}
                                 onChangeText={setLocation}
                                 placeholder="e.g. Ausländerbehörde Berlin"
@@ -279,11 +280,11 @@ export function AppointmentsPage() {
                             />
                         </View>
 
-                        <Text style={styles.fieldLabel}>Notes (optional)</Text>
-                        <View style={[styles.inputRow, { height: 80, alignItems: 'flex-start', paddingTop: 12 }]}>
+                        <Text style={[styles.fieldLabel, { color: Colors.text }]}>Notes (optional)</Text>
+                        <View style={[styles.inputRow, { height: 80, alignItems: 'flex-start', paddingTop: 12, backgroundColor: Colors.card, borderColor: Colors.border }]}>
                             <Ionicons name="create-outline" size={18} color={Colors.textMuted} />
                             <TextInput
-                                style={[styles.input, { height: 60 }]}
+                                style={[styles.input, { height: 60, color: Colors.text }]}
                                 value={notes}
                                 onChangeText={setNotes}
                                 placeholder="Any additional notes..."
@@ -306,7 +307,7 @@ export function AppointmentsPage() {
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: Colors.background },
+    root: { flex: 1 },
     header: { paddingTop: Platform.OS === 'web' ? 56 : 54, paddingHorizontal: 20, paddingBottom: 24 },
     headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     headerTitle: { fontSize: 24, fontWeight: '800', color: 'white' },
@@ -319,36 +320,36 @@ const styles = StyleSheet.create({
     addBtn: { flexDirection: 'row', height: 52, alignItems: 'center', justifyContent: 'center', gap: 8 },
     addBtnText: { fontSize: 15, fontWeight: '700', color: 'white' },
     emptyState: { alignItems: 'center', paddingTop: 60, gap: 12 },
-    emptyIcon: { width: 96, height: 96, borderRadius: 24, backgroundColor: Colors.card, alignItems: 'center', justifyContent: 'center' },
-    emptyTitle: { fontSize: 18, fontWeight: '700', color: Colors.text },
-    emptyText: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', paddingHorizontal: 32, lineHeight: 20 },
-    sectionTitle: { fontSize: 13, fontWeight: '700', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 4 },
-    apptCard: { backgroundColor: Colors.card, borderRadius: 16, flexDirection: 'row', overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+    emptyIcon: { width: 96, height: 96, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+    emptyTitle: { fontSize: 18, fontWeight: '700' },
+    emptyText: { fontSize: 14, textAlign: 'center', paddingHorizontal: 32, lineHeight: 20 },
+    sectionTitle: { fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 4 },
+    apptCard: { borderRadius: 16, flexDirection: 'row', overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
     apptAccent: { width: 4 },
     apptBody: { flex: 1, padding: 14 },
     apptTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     apptIconWrap: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-    apptTitle: { fontSize: 15, fontWeight: '700', color: Colors.text },
-    apptType: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
-    deleteBtn: { padding: 6, borderRadius: 8, backgroundColor: Colors.dangerLight },
-    apptDivider: { height: 1, backgroundColor: Colors.border, marginVertical: 10 },
+    apptTitle: { fontSize: 15, fontWeight: '700' },
+    apptType: { fontSize: 12, marginTop: 2 },
+    deleteBtn: { padding: 6, borderRadius: 8 },
+    apptDivider: { height: 1, marginVertical: 10 },
     apptBottom: { gap: 6 },
     apptInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    apptInfo: { fontSize: 13, color: Colors.textSecondary },
+    apptInfo: { fontSize: 13 },
     apptBadgeRow: { flexDirection: 'row', gap: 6 },
     urgencyBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, alignSelf: 'flex-start' },
     urgencyText: { fontSize: 12, fontWeight: '600' },
-    apptNotes: { fontSize: 12, color: Colors.textSecondary },
-    modal: { flex: 1, backgroundColor: Colors.background },
-    modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1, borderBottomColor: Colors.border },
-    modalTitle: { fontSize: 20, fontWeight: '700', color: Colors.text },
+    apptNotes: { fontSize: 12 },
+    modal: { flex: 1 },
+    modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1 },
+    modalTitle: { fontSize: 20, fontWeight: '700' },
     modalContent: { padding: 20, gap: 8, paddingBottom: 40 },
-    fieldLabel: { fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 6, marginTop: 8 },
-    inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.card, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border, paddingHorizontal: 14, height: 52, gap: 10 },
-    input: { flex: 1, fontSize: 15, color: Colors.text },
+    fieldLabel: { fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 8 },
+    inputRow: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: 1.5, paddingHorizontal: 14, height: 52, gap: 10 },
+    input: { flex: 1, fontSize: 15 },
     typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-    typeChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.card },
-    typeChipText: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
+    typeChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5 },
+    typeChipText: { fontSize: 12, fontWeight: '600' },
     saveWrap: { borderRadius: 14, overflow: 'hidden', marginTop: 16 },
     saveBtn: { height: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
     saveBtnText: { fontSize: 16, fontWeight: '700', color: 'white' },

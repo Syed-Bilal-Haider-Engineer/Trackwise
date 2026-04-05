@@ -6,7 +6,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/shared/lib/auth';
-import { Colors } from '@/shared/theme/colors';
+import { useTheme } from '@/shared/theme/ThemeContext';
 
 type DocType =
     | 'visa'
@@ -38,8 +38,11 @@ const DOC_TYPES: { value: DocType; label: string; icon: string; color: string }[
 
 function getStatus(expiryDate: string | null): 'valid' | 'soon' | 'expired' | 'none' {
     if (!expiryDate) return 'none';
+    // ✅ Fix: UTC avoid karne ke liye manually parse karo
+    const [year, month, day] = expiryDate.split('-').map(Number);
+    const expiry = new Date(year, month - 1, day); // local time mein
     const today = new Date();
-    const expiry = new Date(expiryDate);
+    today.setHours(0, 0, 0, 0);
     const diffDays = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     if (diffDays < 0) return 'expired';
     if (diffDays <= 90) return 'soon';
@@ -48,21 +51,18 @@ function getStatus(expiryDate: string | null): 'valid' | 'soon' | 'expired' | 'n
 
 function getStatusLabel(status: string, expiryDate: string | null): string {
     if (status === 'none') return 'No expiry';
-    const expiry = new Date(expiryDate!);
-    const diffDays = Math.ceil((expiry.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    const [year, month, day] = expiryDate!.split('-').map(Number);
+    const expiry = new Date(year, month - 1, day); // ✅ local time
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     if (status === 'expired') return 'Expired';
     if (status === 'soon') return `Expires in ${diffDays} days`;
     return `Valid · ${expiry.toLocaleDateString('en-GB')}`;
 }
 
-const STATUS_COLORS = {
-    valid: { bg: '#dcfce7', text: '#16a34a' },
-    soon: { bg: '#fef9c3', text: '#ca8a04' },
-    expired: { bg: '#fee2e2', text: '#dc2626' },
-    none: { bg: Colors.border, text: Colors.textMuted },
-};
-
 export function DocumentsPage() {
+    const { colors: Colors } = useTheme();
     const { user } = useAuth();
     const [docs, setDocs] = useState<Document[]>([]);
     const [modalVisible, setModalVisible] = useState(false);
@@ -72,35 +72,27 @@ export function DocumentsPage() {
     const [expiryDate, setExpiryDate] = useState('');
     const [notes, setNotes] = useState('');
 
+    const STATUS_COLORS = {
+        valid: { bg: '#dcfce7', text: '#16a34a' },
+        soon: { bg: '#fef9c3', text: '#ca8a04' },
+        expired: { bg: '#fee2e2', text: '#dc2626' },
+        none: { bg: Colors.border, text: Colors.textMuted },
+    };
+
     const initials = user?.name?.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) ?? 'U';
 
     const handleAdd = () => {
-        if (!docName.trim()) {
-            Alert.alert('Error', 'Please enter document name');
-            return;
-        }
+        if (!docName.trim()) { Alert.alert('Error', 'Please enter document name'); return; }
         const newDoc: Document = {
             id: Math.random().toString(36).slice(2),
-            name: docName.trim(),
-            type: docType,
+            name: docName.trim(), type: docType,
             expiryDate: expiryDate.trim() || null,
-            notes: notes.trim(),
-            createdAt: new Date().toISOString(),
+            notes: notes.trim(), createdAt: new Date().toISOString(),
         };
         setDocs(prev => [newDoc, ...prev]);
         setModalVisible(false);
-        setDocName('');
-        setDocType('visa');
-        setExpiryDate('');
-        setNotes('');
+        setDocName(''); setDocType('visa'); setExpiryDate(''); setNotes('');
     };
-
-    // const handleDelete = (id: string) => {
-    //     Alert.alert('Delete Document', 'Are you sure?', [
-    //         { text: 'Cancel', style: 'cancel' },
-    //         { text: 'Delete', style: 'destructive', onPress: () => setDocs(prev => prev.filter(d => d.id !== id)) },
-    //     ]);
-    // };
 
     const handleDelete = (id: string) => {
         if (Platform.OS === 'web') {
@@ -118,7 +110,7 @@ export function DocumentsPage() {
     const expiringSoon = docs.filter(d => getStatus(d.expiryDate) === 'soon' || getStatus(d.expiryDate) === 'expired');
 
     return (
-        <View style={styles.root}>
+        <View style={[styles.root, { backgroundColor: Colors.background }]}>
             <LinearGradient colors={[Colors.gradientStart, Colors.gradientEnd]} style={styles.header}>
                 <View style={styles.headerTop}>
                     <View>
@@ -132,7 +124,6 @@ export function DocumentsPage() {
             </LinearGradient>
 
             <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
                 {expiringSoon.length > 0 && (
                     <View style={styles.alertBanner}>
                         <Ionicons name="warning" size={18} color="#ca8a04" />
@@ -151,11 +142,11 @@ export function DocumentsPage() {
 
                 {docs.length === 0 ? (
                     <View style={styles.emptyState}>
-                        <View style={styles.emptyIcon}>
+                        <View style={[styles.emptyIcon, { backgroundColor: Colors.card }]}>
                             <Ionicons name="document-text-outline" size={48} color={Colors.textMuted} />
                         </View>
-                        <Text style={styles.emptyTitle}>No documents yet</Text>
-                        <Text style={styles.emptyText}>Add your visa, health insurance, and other important documents.</Text>
+                        <Text style={[styles.emptyTitle, { color: Colors.text }]}>No documents yet</Text>
+                        <Text style={[styles.emptyText, { color: Colors.textSecondary }]}>Add your visa, health insurance, and other important documents.</Text>
                     </View>
                 ) : (
                     docs.map(doc => {
@@ -163,7 +154,7 @@ export function DocumentsPage() {
                         const status = getStatus(doc.expiryDate);
                         const statusColor = STATUS_COLORS[status];
                         return (
-                            <View key={doc.id} style={styles.docCard}>
+                            <View key={doc.id} style={[styles.docCard, { backgroundColor: Colors.card }]}>
                                 <View style={[styles.docAccent, { backgroundColor: typeInfo.color }]} />
                                 <View style={styles.docBody}>
                                     <View style={styles.docTop}>
@@ -171,28 +162,25 @@ export function DocumentsPage() {
                                             <Ionicons name={typeInfo.icon as any} size={20} color={typeInfo.color} />
                                         </View>
                                         <View style={{ flex: 1 }}>
-                                            <Text style={styles.docName}>{doc.name}</Text>
-                                            <Text style={styles.docType}>{typeInfo.label}</Text>
+                                            <Text style={[styles.docName, { color: Colors.text }]}>{doc.name}</Text>
+                                            <Text style={[styles.docType, { color: Colors.textMuted }]}>{typeInfo.label}</Text>
                                         </View>
-                                        <TouchableOpacity onPress={() => handleDelete(doc.id)} style={styles.deleteBtn}>
+                                        <TouchableOpacity onPress={() => handleDelete(doc.id)} style={[styles.deleteBtn, { backgroundColor: Colors.dangerLight }]}>
                                             <Ionicons name="trash-outline" size={16} color={Colors.danger} />
                                         </TouchableOpacity>
                                     </View>
-
-                                    <View style={styles.docDivider} />
-
+                                    <View style={[styles.docDivider, { backgroundColor: Colors.border }]} />
                                     <View style={styles.docBottom}>
                                         <View style={[styles.statusBadge, { backgroundColor: statusColor.bg }]}>
                                             <Ionicons
                                                 name={status === 'expired' ? 'close-circle' : status === 'soon' ? 'warning' : 'checkmark-circle'}
-                                                size={13}
-                                                color={statusColor.text}
+                                                size={13} color={statusColor.text}
                                             />
                                             <Text style={[styles.statusText, { color: statusColor.text }]}>
                                                 {getStatusLabel(status, doc.expiryDate)}
                                             </Text>
                                         </View>
-                                        {doc.notes ? <Text style={styles.docNotes}>{doc.notes}</Text> : null}
+                                        {doc.notes ? <Text style={[styles.docNotes, { color: Colors.textSecondary }]}>{doc.notes}</Text> : null}
                                     </View>
                                 </View>
                             </View>
@@ -202,66 +190,45 @@ export function DocumentsPage() {
             </ScrollView>
 
             <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
-                <View style={styles.modal}>
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Add Document</Text>
+                <View style={[styles.modal, { backgroundColor: Colors.background }]}>
+                    <View style={[styles.modalHeader, { borderBottomColor: Colors.border }]}>
+                        <Text style={[styles.modalTitle, { color: Colors.text }]}>Add Document</Text>
                         <TouchableOpacity onPress={() => setModalVisible(false)}>
                             <Ionicons name="close" size={24} color={Colors.text} />
                         </TouchableOpacity>
                     </View>
-
                     <ScrollView contentContainerStyle={styles.modalContent}>
-                        <Text style={styles.fieldLabel}>Document Name</Text>
-                        <View style={styles.inputRow}>
+                        <Text style={[styles.fieldLabel, { color: Colors.text }]}>Document Name</Text>
+                        <View style={[styles.inputRow, { backgroundColor: Colors.card, borderColor: Colors.border }]}>
                             <Ionicons name="document-outline" size={18} color={Colors.textMuted} />
-                            <TextInput
-                                style={styles.input}
-                                value={docName}
-                                onChangeText={setDocName}
-                                placeholder="e.g. Student Visa"
-                                placeholderTextColor={Colors.textMuted}
-                            />
+                            <TextInput style={[styles.input, { color: Colors.text }]} value={docName} onChangeText={setDocName} placeholder="e.g. Student Visa" placeholderTextColor={Colors.textMuted} />
                         </View>
 
-                        <Text style={styles.fieldLabel}>Document Type</Text>
+                        <Text style={[styles.fieldLabel, { color: Colors.text }]}>Document Type</Text>
                         <View style={styles.typeGrid}>
                             {DOC_TYPES.map(t => (
                                 <TouchableOpacity
                                     key={t.value}
-                                    style={[styles.typeChip, docType === t.value && { backgroundColor: t.color, borderColor: t.color }]}
+                                    style={[styles.typeChip, { backgroundColor: Colors.card, borderColor: Colors.border }, docType === t.value && { backgroundColor: t.color, borderColor: t.color }]}
                                     onPress={() => setDocType(t.value)}
                                     activeOpacity={0.8}
                                 >
                                     <Ionicons name={t.icon as any} size={14} color={docType === t.value ? 'white' : Colors.textSecondary} />
-                                    <Text style={[styles.typeChipText, docType === t.value && { color: 'white' }]}>{t.label}</Text>
+                                    <Text style={[styles.typeChipText, { color: Colors.textSecondary }, docType === t.value && { color: 'white' }]}>{t.label}</Text>
                                 </TouchableOpacity>
                             ))}
                         </View>
 
-                        <Text style={styles.fieldLabel}>Expiry Date (optional)</Text>
-                        <View style={styles.inputRow}>
+                        <Text style={[styles.fieldLabel, { color: Colors.text }]}>Expiry Date (optional)</Text>
+                        <View style={[styles.inputRow, { backgroundColor: Colors.card, borderColor: Colors.border }]}>
                             <Ionicons name="calendar-outline" size={18} color={Colors.textMuted} />
-                            <TextInput
-                                style={styles.input}
-                                value={expiryDate}
-                                onChangeText={setExpiryDate}
-                                placeholder="YYYY-MM-DD"
-                                placeholderTextColor={Colors.textMuted}
-                                keyboardType="numbers-and-punctuation"
-                            />
+                            <TextInput style={[styles.input, { color: Colors.text }]} value={expiryDate} onChangeText={setExpiryDate} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} keyboardType="numbers-and-punctuation" />
                         </View>
 
-                        <Text style={styles.fieldLabel}>Notes (optional)</Text>
-                        <View style={[styles.inputRow, { height: 80, alignItems: 'flex-start', paddingTop: 12 }]}>
+                        <Text style={[styles.fieldLabel, { color: Colors.text }]}>Notes (optional)</Text>
+                        <View style={[styles.inputRow, { backgroundColor: Colors.card, borderColor: Colors.border, height: 80, alignItems: 'flex-start', paddingTop: 12 }]}>
                             <Ionicons name="create-outline" size={18} color={Colors.textMuted} />
-                            <TextInput
-                                style={[styles.input, { height: 60 }]}
-                                value={notes}
-                                onChangeText={setNotes}
-                                placeholder="Any additional notes..."
-                                placeholderTextColor={Colors.textMuted}
-                                multiline
-                            />
+                            <TextInput style={[styles.input, { height: 60, color: Colors.text }]} value={notes} onChangeText={setNotes} placeholder="Any additional notes..." placeholderTextColor={Colors.textMuted} multiline />
                         </View>
 
                         <TouchableOpacity style={styles.saveWrap} onPress={handleAdd} activeOpacity={0.85}>
@@ -278,7 +245,7 @@ export function DocumentsPage() {
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: Colors.background },
+    root: { flex: 1 },
     header: { paddingTop: Platform.OS === 'web' ? 56 : 54, paddingHorizontal: 20, paddingBottom: 24 },
     headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     headerTitle: { fontSize: 24, fontWeight: '800', color: 'white' },
@@ -293,32 +260,32 @@ const styles = StyleSheet.create({
     addBtn: { flexDirection: 'row', height: 52, alignItems: 'center', justifyContent: 'center', gap: 8 },
     addBtnText: { fontSize: 15, fontWeight: '700', color: 'white' },
     emptyState: { alignItems: 'center', paddingTop: 60, gap: 12 },
-    emptyIcon: { width: 96, height: 96, borderRadius: 24, backgroundColor: Colors.card, alignItems: 'center', justifyContent: 'center' },
-    emptyTitle: { fontSize: 18, fontWeight: '700', color: Colors.text },
-    emptyText: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', paddingHorizontal: 32, lineHeight: 20 },
-    docCard: { backgroundColor: Colors.card, borderRadius: 16, flexDirection: 'row', overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+    emptyIcon: { width: 96, height: 96, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+    emptyTitle: { fontSize: 18, fontWeight: '700' },
+    emptyText: { fontSize: 14, textAlign: 'center', paddingHorizontal: 32, lineHeight: 20 },
+    docCard: { borderRadius: 16, flexDirection: 'row', overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
     docAccent: { width: 4 },
     docBody: { flex: 1, padding: 14 },
     docTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     docIconWrap: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-    docName: { fontSize: 15, fontWeight: '700', color: Colors.text },
-    docType: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
-    deleteBtn: { padding: 6, borderRadius: 8, backgroundColor: Colors.dangerLight },
-    docDivider: { height: 1, backgroundColor: Colors.border, marginVertical: 10 },
+    docName: { fontSize: 15, fontWeight: '700' },
+    docType: { fontSize: 12, marginTop: 2 },
+    deleteBtn: { padding: 6, borderRadius: 8 },
+    docDivider: { height: 1, marginVertical: 10 },
     docBottom: { gap: 6 },
     statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, alignSelf: 'flex-start' },
     statusText: { fontSize: 12, fontWeight: '600' },
-    docNotes: { fontSize: 12, color: Colors.textSecondary },
-    modal: { flex: 1, backgroundColor: Colors.background },
-    modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1, borderBottomColor: Colors.border },
-    modalTitle: { fontSize: 20, fontWeight: '700', color: Colors.text },
+    docNotes: { fontSize: 12 },
+    modal: { flex: 1 },
+    modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1 },
+    modalTitle: { fontSize: 20, fontWeight: '700' },
     modalContent: { padding: 20, gap: 8, paddingBottom: 40 },
-    fieldLabel: { fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 6, marginTop: 8 },
-    inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.card, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border, paddingHorizontal: 14, height: 52, gap: 10 },
-    input: { flex: 1, fontSize: 15, color: Colors.text },
+    fieldLabel: { fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 8 },
+    inputRow: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: 1.5, paddingHorizontal: 14, height: 52, gap: 10 },
+    input: { flex: 1, fontSize: 15 },
     typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-    typeChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.card },
-    typeChipText: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
+    typeChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5 },
+    typeChipText: { fontSize: 12, fontWeight: '600' },
     saveWrap: { borderRadius: 14, overflow: 'hidden', marginTop: 16 },
     saveBtn: { height: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
     saveBtnText: { fontSize: 16, fontWeight: '700', color: 'white' },

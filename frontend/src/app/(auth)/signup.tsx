@@ -9,10 +9,12 @@ import { useRouter } from 'expo-router';
 
 // import { useAuth } from '@/shared/lib/auth';
 import { useSignUp } from '@clerk/clerk-expo';
-import { Colors } from '@/shared/theme/colors';
+// import { Colors } from '@/shared/theme/colors';
+import { useTheme } from '@/shared/theme/ThemeContext';
 
 export default function SignupScreen() {
   const router = useRouter();
+  const { colors: Colors } = useTheme();
   // const { signup } = useAuth();
   const { signUp, setActive, isLoaded } = useSignUp();
   const [step, setStep] = useState<'form' | 'verify'>('form');
@@ -236,25 +238,25 @@ const handleVerify = async () => {
           <Text style={styles.tagline}>Create your account</Text>
         </LinearGradient>
 
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: Colors.card }] }>
           {step === 'verify' ? (
             <>
-              <Text style={styles.title}>Verify Email ✉️</Text>
-              <Text style={styles.subtitle}>Check your email for a 6-digit code</Text>
+              <Text style={[styles.title, { color: Colors.text }]}>Verify Email ✉️</Text>
+              <Text style={[styles.subtitle, { color: Colors.textSecondary }]}>Check your email for a 6-digit code</Text>
 
               {error ? (
-                <View style={styles.errorBox}>
+                <View style={[styles.errorBox, { backgroundColor: Colors.dangerLight }] }>
                   <Ionicons name="alert-circle-outline" size={16} color={Colors.dangerDark} />
-                  <Text style={styles.errorText}>{error}</Text>
+                  <Text style={[styles.errorText, { color: Colors.dangerDark }]}>{error}</Text>
                 </View>
               ) : null}
 
               <View style={styles.field}>
                 <Text style={styles.label}>Verification Code</Text>
-                <View style={styles.inputRow}>
+                <View style={[styles.inputRow, { backgroundColor: Colors.inputBg, borderColor: Colors.border }] }>
                   <Ionicons name="key-outline" size={18} color={Colors.textMuted} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: Colors.text }]}
                     value={code}
                     onChangeText={setCode}
                     placeholder="123456"
@@ -272,22 +274,22 @@ const handleVerify = async () => {
             </>
           ) : (
             <>
-              <Text style={styles.title}>Join TrackWise 🚀</Text>
-              <Text style={styles.subtitle}>Start tracking your work hours today</Text>
+              <Text style={[styles.title, { color: Colors.text }]}>Join TrackWise 🚀</Text>
+              <Text style={[styles.subtitle, { color: Colors.textSecondary }]}>Start tracking your work hours today</Text>
 
               {error ? (
-                <View style={styles.errorBox}>
+                <View style={[styles.errorBox, { backgroundColor: Colors.dangerLight }] }>
                   <Ionicons name="alert-circle-outline" size={16} color={Colors.dangerDark} />
-                  <Text style={styles.errorText}>{error}</Text>
+                  <Text style={[styles.errorText, { color: Colors.dangerDark }]}>{error}</Text>
                 </View>
               ) : null}
 
               <View style={styles.field}>
-                <Text style={styles.label}>Full Name</Text>
-                <View style={styles.inputRow}>
+                <Text style={[styles.label, { color: Colors.text }]}>Full Name</Text>
+                <View style={[styles.inputRow, { backgroundColor: Colors.inputBg, borderColor: Colors.border }] }>
                   <Ionicons name="person-outline" size={18} color={Colors.textMuted} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: Colors.text }]}
                     value={name}
                     onChangeText={setName}
                     placeholder="Ahmed Müller"
@@ -298,11 +300,11 @@ const handleVerify = async () => {
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>Email</Text>
-                <View style={styles.inputRow}>
+                <Text style={[styles.label, { color: Colors.text }]}>Email</Text>
+                <View style={[styles.inputRow, { backgroundColor: Colors.inputBg, borderColor: Colors.border }] }>
                   <Ionicons name="mail-outline" size={18} color={Colors.textMuted} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: Colors.text }]}
                     value={email}
                     onChangeText={setEmail}
                     placeholder="your@email.com"
@@ -315,8 +317,8 @@ const handleVerify = async () => {
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>Password</Text>
-                <View style={styles.inputRow}>
+                <Text style={[styles.label, { color: Colors.text }]}>Password</Text>
+                <View style={[styles.inputRow, { backgroundColor: Colors.inputBg, borderColor: Colors.border }] }>
                   <Ionicons name="lock-closed-outline" size={18} color={Colors.textMuted} />
                   <TextInput
                     style={[styles.input, { flex: 1 }]}
@@ -333,11 +335,11 @@ const handleVerify = async () => {
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.label}>Confirm Password</Text>
-                <View style={styles.inputRow}>
+                <Text style={[styles.label, { color: Colors.text }]}>Confirm Password</Text>
+                <View style={[styles.inputRow, { backgroundColor: Colors.inputBg, borderColor: Colors.border }] }>
                   <Ionicons name="shield-checkmark-outline" size={18} color={Colors.textMuted} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: Colors.text }]}
                     value={confirmPass}
                     onChangeText={setConfirmPass}
                     placeholder="Repeat password"
@@ -354,9 +356,9 @@ const handleVerify = async () => {
               </TouchableOpacity>
 
               <View style={styles.footerRow}>
-                <Text style={styles.footerLabel}>Already have an account? </Text>
+                <Text style={[styles.footerLabel, { color: Colors.textSecondary }]}>Already have an account? </Text>
                 <TouchableOpacity onPress={() => router.back()}>
-                  <Text style={styles.footerLink}>Sign In</Text>
+                  <Text style={[styles.footerLink, { color: Colors.primary }]}>Sign In</Text>
                 </TouchableOpacity>
               </View>
             </>
@@ -370,7 +372,7 @@ const handleVerify = async () => {
 
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: Colors.background },
+  container: { flexGrow: 1 },
   header: {
     paddingTop: Platform.OS === 'web' ? 60 : 56,
     paddingBottom: 44,
@@ -396,7 +398,6 @@ const styles = StyleSheet.create({
   appName: { fontSize: 26, fontWeight: '800', color: 'white' },
   tagline: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
   card: {
-    backgroundColor: Colors.card,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     marginTop: -20,
@@ -404,36 +405,33 @@ const styles = StyleSheet.create({
     paddingBottom: 50,
     flex: 1,
   },
-  title: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 4 },
-  subtitle: { fontSize: 14, color: Colors.textSecondary, marginBottom: 24 },
+  title: { fontSize: 22, fontWeight: '700', marginBottom: 4 },
+  subtitle: { fontSize: 14, marginBottom: 24 },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.dangerLight,
     borderRadius: 10,
     padding: 12,
     marginBottom: 16,
     gap: 8,
   },
-  errorText: { flex: 1, color: Colors.dangerDark, fontSize: 13 },
+  errorText: { flex: 1, fontSize: 13 },
   field: { marginBottom: 14 },
-  label: { fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 6 },
+  label: { fontSize: 13, fontWeight: '600', marginBottom: 6 },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.inputBg,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: Colors.border,
     paddingHorizontal: 14,
     height: 52,
     gap: 10,
   },
-  input: { flex: 1, fontSize: 15, color: Colors.text },
+  input: { flex: 1, fontSize: 15 },
   btnWrap: { borderRadius: 14, overflow: 'hidden', marginTop: 8, marginBottom: 20 },
   btn: { height: 54, alignItems: 'center', justifyContent: 'center' },
   btnText: { fontSize: 16, fontWeight: '700', color: 'white' },
   footerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
-  footerLabel: { fontSize: 14, color: Colors.textSecondary },
-  footerLink: { fontSize: 14, color: Colors.primary, fontWeight: '700' },
+  footerLabel: { fontSize: 14 },
+  footerLink: { fontSize: 14, fontWeight: '700' },
 });

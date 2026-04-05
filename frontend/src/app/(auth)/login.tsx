@@ -9,10 +9,11 @@ import { useRouter } from 'expo-router';
 
 // import { useAuth } from '@/shared/lib/auth';
 import { useSignIn } from '@clerk/clerk-expo';
-import { Colors } from '@/shared/theme/colors';
+import { useTheme } from '@/shared/theme/ThemeContext';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { colors: Colors } = useTheme();
   // const { login } = useAuth();
   const { signIn, setActive, isLoaded } = useSignIn();
 
@@ -22,42 +23,30 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // const handleLogin = async () => {
-  //   setError('');
-  //   if (!email.trim() || !password.trim()) {
-  //     setError('Please fill in all fields');
-  //     return;
-  //   }
-  //   setLoading(true);
-  //   const result = await login(email, password);
-  //   setLoading(false);
-  //   if (!result.success) setError(result.error ?? 'Login failed');
-  // };
-
   const handleLogin = async () => {
-  if (!isLoaded) return;
-  setError('');
-  if (!email.trim() || !password.trim()) {
-    setError('Please fill in all fields');
-    return;
-  }
-  setLoading(true);
-  try {
-    const result = await signIn.create({
-      identifier: email.trim().toLowerCase(),
-      password,
-    });
-    await setActive({ session: result.createdSessionId });
-  } catch (err: any) {
-    setError(err.errors?.[0]?.message || 'Login failed');
-  } finally {
-    setLoading(false);
-  }
-};
+    if (!isLoaded) return;
+    setError('');
+    if (!email.trim() || !password.trim()) {
+      setError('Please fill in all fields');
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await signIn.create({
+        identifier: email.trim().toLowerCase(),
+        password,
+      });
+      await setActive({ session: result.createdSessionId });
+    } catch (err: any) {
+      setError(err.errors?.[0]?.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: Colors.background }}
+      style={[styles.root, { backgroundColor: Colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
@@ -76,23 +65,23 @@ export default function LoginScreen() {
           <Text style={styles.tagline}>Track your work, stay compliant</Text>
         </LinearGradient>
 
-        <View style={styles.card}>
-          <Text style={styles.title}>Welcome back 👋</Text>
-          <Text style={styles.subtitle}>Sign in to your account</Text>
+        <View style={[styles.card, { backgroundColor: Colors.card }]}> 
+          <Text style={[styles.title, { color: Colors.text }]}>Welcome back 👋</Text>
+          <Text style={[styles.subtitle, { color: Colors.textSecondary }]}>Sign in to your account</Text>
 
           {error ? (
-            <View style={styles.errorBox}>
+            <View style={[styles.errorBox, { backgroundColor: Colors.dangerLight }]}> 
               <Ionicons name="alert-circle-outline" size={16} color={Colors.dangerDark} />
-              <Text style={styles.errorText}>{error}</Text>
+              <Text style={[styles.errorText, { color: Colors.dangerDark }]}>{error}</Text>
             </View>
           ) : null}
 
           <View style={styles.field}>
-            <Text style={styles.label}>Email</Text>
-            <View style={styles.inputRow}>
+            <Text style={[styles.label, { color: Colors.text }]}>Email</Text>
+            <View style={[styles.inputRow, { backgroundColor: Colors.inputBg, borderColor: Colors.border }]}>
               <Ionicons name="mail-outline" size={18} color={Colors.textMuted} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: Colors.text }]}
                 value={email}
                 onChangeText={setEmail}
                 placeholder="your@email.com"
@@ -105,11 +94,11 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.inputRow}>
+            <Text style={[styles.label, { color: Colors.text }]}>Password</Text>
+            <View style={[styles.inputRow, { backgroundColor: Colors.inputBg, borderColor: Colors.border }]}>
               <Ionicons name="lock-closed-outline" size={18} color={Colors.textMuted} />
               <TextInput
-                style={[styles.input, { flex: 1 }]}
+                style={[styles.input, { flex: 1, color: Colors.text }]}
                 value={password}
                 onChangeText={setPassword}
                 placeholder="••••••••"
@@ -126,7 +115,7 @@ export default function LoginScreen() {
             style={styles.forgot}
             onPress={() => router.push('/(auth)/forgot-password')}
           >
-            <Text style={styles.forgotText}>Forgot password?</Text>
+            <Text style={[styles.forgotText, { color: Colors.primary }]}>Forgot password?</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -144,9 +133,9 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <View style={styles.footerRow}>
-            <Text style={styles.footerLabel}>Don't have an account? </Text>
+            <Text style={[styles.footerLabel, { color: Colors.textSecondary }]}>Don't have an account? </Text>
             <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
-              <Text style={styles.footerLink}>Sign Up</Text>
+              <Text style={[styles.footerLink, { color: Colors.primary }]}>Sign Up</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -156,7 +145,8 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: Colors.background },
+  root: { flex: 1 },
+  container: { flexGrow: 1 },
   header: {
     paddingTop: Platform.OS === 'web' ? 80 : 70,
     paddingBottom: 50,
@@ -175,7 +165,6 @@ const styles = StyleSheet.create({
   appName: { fontSize: 30, fontWeight: '800', color: 'white', letterSpacing: 0.5 },
   tagline: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
   card: {
-    backgroundColor: Colors.card,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     marginTop: -20,
@@ -183,38 +172,35 @@ const styles = StyleSheet.create({
     paddingBottom: 50,
     flex: 1,
   },
-  title: { fontSize: 24, fontWeight: '700', color: Colors.text, marginBottom: 4 },
-  subtitle: { fontSize: 14, color: Colors.textSecondary, marginBottom: 24 },
+  title: { fontSize: 24, fontWeight: '700', marginBottom: 4 },
+  subtitle: { fontSize: 14, marginBottom: 24 },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.dangerLight,
     borderRadius: 10,
     padding: 12,
     marginBottom: 16,
     gap: 8,
   },
-  errorText: { flex: 1, color: Colors.dangerDark, fontSize: 13 },
+  errorText: { flex: 1, fontSize: 13 },
   field: { marginBottom: 16 },
-  label: { fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 6 },
+  label: { fontSize: 13, fontWeight: '600', marginBottom: 6 },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.inputBg,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: Colors.border,
     paddingHorizontal: 14,
     height: 52,
     gap: 10,
   },
-  input: { flex: 1, fontSize: 15, color: Colors.text },
+  input: { flex: 1, fontSize: 15 },
   forgot: { alignSelf: 'flex-end', marginBottom: 24 },
-  forgotText: { fontSize: 13, color: Colors.primary, fontWeight: '600' },
+  forgotText: { fontSize: 13, fontWeight: '600' },
   btnWrap: { borderRadius: 14, overflow: 'hidden', marginBottom: 20 },
   btn: { height: 54, alignItems: 'center', justifyContent: 'center' },
   btnText: { fontSize: 16, fontWeight: '700', color: 'white' },
   footerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
-  footerLabel: { fontSize: 14, color: Colors.textSecondary },
-  footerLink: { fontSize: 14, color: Colors.primary, fontWeight: '700' },
+  footerLabel: { fontSize: 14 },
+  footerLink: { fontSize: 14, fontWeight: '700' },
 });

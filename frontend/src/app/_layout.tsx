@@ -6,9 +6,12 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { AppProviders } from './_providers/AppProviders';
 import { useAuth } from '@/shared/lib/auth';
-import { Colors } from '@/shared/theme/colors';
+// import { Colors } from '@/shared/theme/colors';
+import { useTheme } from '@/shared/theme/ThemeContext';
+
 
 function SplashView() {
+  const { colors: Colors } = useTheme();
   return (
     <LinearGradient
       colors={[Colors.gradientStart, Colors.gradientEnd]}
@@ -27,6 +30,7 @@ function SplashView() {
 }
 
 function AuthGate() {
+  const { colors: Colors } = useTheme();
   const { user, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
