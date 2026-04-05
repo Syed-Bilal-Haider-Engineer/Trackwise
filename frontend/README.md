@@ -59,3 +59,67 @@ Join our community of developers creating universal apps.
 Abubakar
 abubakarmujahid980@gmail.com
 (@#password@#)
+
+
+
+
+
+TrackWise Frontend Project — Context & Current Status
+Main ek React Native (Expo) app bana raha hun jiska naam TrackWise hai — German international students ke liye work hour tracking, document tracking, aur appointment management app.
+Tech Stack:
+
+Expo (Expo Router file-based routing)
+TypeScript
+Clerk authentication
+TanStack Query
+AsyncStorage (local, backend baad mein connect hoga)
+expo-linear-gradient, @expo/vector-icons
+
+Project Structure:
+frontend/
+├── src/
+│   ├── app/
+│   │   ├── (auth)/         — login, signup, forgot-password
+│   │   ├── (tabs)/         — dashboard, work, history, documents, appointments, profile
+│   │   ├── _providers/     — AppProviders.tsx (Clerk + QueryClient)
+│   │   └── _layout.tsx     — Root layout with ClerkProvider + AuthGate
+│   ├── pages/
+│   │   ├── dashboard/      — DashboardPage.tsx
+│   │   ├── add-work/       — AddWorkPage.tsx (Hub: Work + Docs + Appointments)
+│   │   ├── work-history/   — WorkHistoryPage.tsx
+│   │   ├── documents/      — DocumentsPage.tsx
+│   │   └── appointments/   — AppointmentsPage.tsx
+│   ├── shared/
+│   │   ├── lib/
+│   │   │   ├── auth.tsx        — Clerk useAuth wrapper
+│   │   │   ├── useDocuments.tsx — Global docs state
+│   │   │   └── useAppointments.tsx — Global appointments state
+│   │   └── theme/colors.ts
+│   ├── features/work-log/  — TanStack Query hooks
+│   └── entities/work-entry/
+Jo kaam ho chuka hai:
+
+✅ Clerk signup/login (email verification)
+✅ Dashboard — today hours, weekly, monthly, yearly 120-day German limit
+✅ Add Hub — Work entry / Document / Appointment ek page pe
+✅ Work History — month filter
+✅ Documents page — expiry tracking, status badges
+✅ Appointments page — urgency tracking
+✅ Profile — edit name, change password, logout
+✅ Custom tab bar — 6 tabs
+
+Ab karna hai:
+
+Documents aur Appointments tabs hataane hain — sirf 4 tabs: Dashboard, Add, History, Profile
+Dashboard mein Documents aur Appointments cards add karne hain (useDocuments aur useAppointments hooks se)
+History page mein 3 tabs: Work / Docs / Appointments
+Dark/Light theme
+CLI migration (React Native CLI) — Android Studio install ho raha hai
+
+Important notes:
+
+Backend se connect nahi — abhi local state hai
+useDocuments aur useAppointments global module-level state use karte hain
+Beginner developer hun React Native mein — step by step guide karo
+Ek kaam khatam hone ke baad agla karo
+Poora code diya karo, tukron mein nahi
