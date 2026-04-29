@@ -1,8 +1,60 @@
-require('dotenv').config();
-const app = require('./app');
+import express from "express";
+import cors from "cors";
+import rateLimit from "express-rate-limit";
+import { initDB } from "./models/db.js";
+import authRouter from "./routes/auth.js";
+import documentsRouter from "./routes/documents.js";
+import timeRouter from "./routes/time.js";
+import aiRouter from "./routes/ai.js";
+import { startCronJobs } from "./utils/cron.js";
 
-const PORT = process.env.PORT || 3000;
+const app = express();
+const PORT = process.env.PORT || 4000;
+
+// Middleware
+app.use(cors({ origin: "*", credentials: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+
+// Rate limiting
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
+
+// Health check
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// Routes
+app.use("/auth", authRouter);
+app.use("/documents", documentsRouter);
+app.use("/time", timeRouter);
+app.use("/ai", aiRouter);
+
+// Static uploads
+app.use("/uploads", express.static("/app/uploads"));
+
+// 404
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
+// Error handler
+app.use((err, req, res, _next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: err.message || "Internal server error" });
+});
+
+// Init
+initDB();
+startCronJobs();
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`🚀 TrackWise API running on port ${PORT}`);
 });

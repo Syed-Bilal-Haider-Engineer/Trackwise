@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  backend:
+    image: ghcr.io/${GITHUB_REPOSITORY}/trackwise-api:${IMAGE_TAG:-latest}
+    container_name: trackwise-api
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - JWT_SECRET=${JWT_SECRET}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      - backend-data:/app/data
+    networks:
+      - trackwise-net
+    restart: always
+
+  frontend:
+    image: ghcr.io/${GITHUB_REPOSITORY}/trackwise-web:${IMAGE_TAG:-latest}
+    container_name: trackwise-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - trackwise-net
+    restart: always
+
+  nginx:
+    image: nginx:alpine
+    container_name: trackwise-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - trackwise-net
+    restart: always
+
+volumes:
+  backend-data:
+
+networks:
+  trackwise-net:
+    driver: bridge
