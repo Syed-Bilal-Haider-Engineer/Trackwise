@@ -29,7 +29,7 @@ export default function Layout() {
   }, [location]);
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}>
+    <div style={{ display: "flex", justifyContent:"space-around", minHeight: "100vh", background: "var(--bg)" }}>
       {/* Sidebar */}
       <>
         {sidebarOpen && (
@@ -42,7 +42,6 @@ export default function Layout() {
           />
         )}
         <aside style={{
-          position: "fixed", left: 0, top: 0, bottom: 0,
           width: 240,
           background: "var(--bg-2)",
           borderRight: "1px solid var(--border)",

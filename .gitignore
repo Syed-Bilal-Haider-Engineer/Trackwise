@@ -10,6 +10,7 @@ npm-debug.log*
 dist/
 build/
 .vite/
+.expo/
 
 # Docker volumes
 data/
