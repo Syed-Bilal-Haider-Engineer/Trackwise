@@ -1,33 +1,26 @@
 import cron from "node-cron";
-import { getDB } from "../models/db.js";
-import { v4 as uuid } from "uuid";
+import AiInsight from "../models/AiInsight.js";
+import Document from "../models/Document.js";
+import TimeEntry from "../models/TimeEntry.js";
+import User from "../models/User.js";
 
 export function startCronJobs() {
-  // Daily check at 8am: scan expiring documents and create AI insights
-  cron.schedule("0 8 * * *", () => {
+  cron.schedule("0 8 * * *", async () => {
     console.log("⏰ Running daily expiry check...");
-    checkExpiringDocuments();
+    await checkExpiringDocuments();
   });
 
-  // Weekly compliance check: Sunday midnight
-  cron.schedule("0 0 * * 0", () => {
+  cron.schedule("0 0 * * 0", async () => {
     console.log("⏰ Running weekly compliance check...");
-    checkWorkHoursCompliance();
+    await checkWorkHoursCompliance();
   });
 
   console.log("✅ Cron jobs started");
 }
 
-function checkExpiringDocuments() {
-  const db = getDB();
+async function checkExpiringDocuments() {
   const today = new Date();
-
-  // Get all documents with expiry dates
-  const docs = db
-    .prepare(
-      "SELECT d.*, u.id as user_id FROM documents d JOIN users u ON d.user_id = u.id WHERE d.expiry_date IS NOT NULL AND d.status = 'active'"
-    )
-    .all();
+  const docs = await Document.find({ expiry_date: { $ne: null }, status: "active" }).lean();
 
   for (const doc of docs) {
     const expiry = new Date(doc.expiry_date);
@@ -63,94 +56,93 @@ function checkExpiringDocuments() {
     }
 
     if (severity && message) {
-      // Check if we already have a recent insight for this document
-      const existing = db
-        .prepare(
-          "SELECT id FROM ai_insights WHERE user_id = ? AND message LIKE ? AND created_at > datetime('now', '-7 days')"
-        )
-        .get(doc.user_id, `%${doc.name}%`);
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const existing = await AiInsight.findOne({
+        user_id: doc.user_id,
+        message: { $regex: doc.name, $options: "i" },
+        created_at: { $gt: sevenDaysAgo },
+      }).lean();
 
       if (!existing) {
-        db.prepare(
-          "INSERT INTO ai_insights (id, user_id, type, message, severity) VALUES (?, ?, ?, ?, ?)"
-        ).run(uuid(), doc.user_id, `Document: ${doc.name}`, message, severity);
+        await AiInsight.create({
+          user_id: doc.user_id,
+          type: `Document: ${doc.name}`,
+          message,
+          severity,
+        });
         console.log(`📄 Expiry alert created for user ${doc.user_id}: ${doc.name}`);
       }
     }
   }
 }
 
-function checkWorkHoursCompliance() {
-  const db = getDB();
-  const users = db.prepare("SELECT id, job_type FROM users").all();
+async function checkWorkHoursCompliance() {
+  const users = await User.find({}).select("_id job_type").lean();
   const now = new Date();
   const yearStart = new Date(now.getFullYear(), 0, 1);
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
   for (const user of users) {
-    const yearEntries = db
-      .prepare("SELECT hours FROM time_entries WHERE user_id = ? AND date >= ?")
-      .all(user.id, yearStart.toISOString().split("T")[0]);
-
-    const monthEntries = db
-      .prepare("SELECT hours FROM time_entries WHERE user_id = ? AND date >= ?")
-      .all(user.id, monthStart.toISOString().split("T")[0]);
+    const entries = await TimeEntry.find({ user_id: user._id }).select("hours date").lean();
+    const yearEntries = entries.filter((e) => new Date(e.date) >= yearStart);
+    const monthEntries = entries.filter((e) => new Date(e.date) >= monthStart);
 
     if (user.job_type === "student") {
       const fullDays = yearEntries.filter((e) => e.hours >= 4).length;
       if (fullDays >= 120) {
-        const existing = db
-          .prepare(
-            "SELECT id FROM ai_insights WHERE user_id = ? AND type LIKE '%Work Limit%' AND created_at > datetime('now', '-7 days')"
-          )
-          .get(user.id);
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const existing = await AiInsight.findOne({
+          user_id: user._id,
+          type: { $regex: "Work Limit", $options: "i" },
+          created_at: { $gt: sevenDaysAgo },
+        }).lean();
 
         if (!existing) {
-          db.prepare(
-            "INSERT INTO ai_insights (id, user_id, type, message, severity) VALUES (?, ?, ?, ?, ?)"
-          ).run(
-            uuid(),
-            user.id,
-            "Work Limit Warning",
-            JSON.stringify({
+          await AiInsight.create({
+            user_id: user._id,
+            type: "Work Limit Warning",
+            message: JSON.stringify({
               type: "danger",
               title: "🚨 Approaching annual work limit!",
               message: `You have worked ${fullDays} full days this year. The legal limit for students is 140 full days.`,
               action: "Reduce working hours to avoid visa/permit violations",
             }),
-            "danger"
-          );
+            severity: "danger",
+          });
         }
       }
     }
 
-    // Monthly limit check
     const monthHours = monthEntries.reduce((s, e) => s + e.hours, 0);
     const limits = { mini_job: 30, part_time: 80, full_time: 180 };
     const limit = limits[user.job_type];
 
     if (limit && monthHours >= limit * 0.9) {
-      const existing = db
-        .prepare(
-          "SELECT id FROM ai_insights WHERE user_id = ? AND type LIKE '%Monthly%' AND created_at > datetime('now', '-3 days')"
-        )
-        .get(user.id);
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+      const existing = await AiInsight.findOne({
+        user_id: user._id,
+        type: { $regex: "Monthly", $options: "i" },
+        created_at: { $gt: threeDaysAgo },
+      }).lean();
 
       if (!existing) {
-        db.prepare(
-          "INSERT INTO ai_insights (id, user_id, type, message, severity) VALUES (?, ?, ?, ?, ?)"
-        ).run(
-          uuid(),
-          user.id,
-          "Monthly Hours Warning",
-          JSON.stringify({
+        await AiInsight.create({
+          user_id: user._id,
+          type: "Monthly Hours Warning",
+          message: JSON.stringify({
             type: "warning",
             title: `⏰ Monthly hours at ${Math.round((monthHours / limit) * 100)}%`,
             message: `You've worked ${monthHours.toFixed(1)} of ${limit} allowed hours this month.`,
             action: `You have ${(limit - monthHours).toFixed(1)} hours remaining this month`,
           }),
-          "warning"
-        );
+          severity: "warning",
+        });
       }
     }
   }

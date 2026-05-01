@@ -13,6 +13,7 @@ services:
       - PORT=4000
       - JWT_SECRET=${JWT_SECRET:-supersecretkey}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - MONGO_URI=${MONGO_URI}
     volumes:
       - backend-data:/app/data
     networks:

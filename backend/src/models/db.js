@@ -1,70 +1,16 @@
-import Database from "better-sqlite3";
-import path from "path";
+import mongoose from "mongoose";
 
-const DB_PATH = process.env.DB_PATH || "/app/data/trackwise.db";
-
-let db;
-
-export function getDB() {
-  if (!db) {
-    db = new Database(DB_PATH);
-    db.pragma("journal_mode = WAL");
-    db.pragma("foreign_keys = ON");
+export default async function connectDB() {
+  console.log("ENV CHECK:", process.env.MONGO_URI ? "MONGO_URI is set" : "MONGO_URI is NOT set");
+  if (!process.env.MONGO_URI) {
+    throw new Error("MONGO_URI is missing. Set it in your environment variables.");
   }
-  return db;
-}
 
-export function initDB() {
-  const db = getDB();
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      email TEXT UNIQUE NOT NULL,
-      name TEXT NOT NULL,
-      password_hash TEXT NOT NULL,
-      job_type TEXT DEFAULT 'student',
-      created_at TEXT DEFAULT (datetime('now')),
-      updated_at TEXT DEFAULT (datetime('now'))
-    );
-
-    CREATE TABLE IF NOT EXISTS documents (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      name TEXT NOT NULL,
-      type TEXT NOT NULL,
-      file_path TEXT,
-      expiry_date TEXT,
-      notes TEXT,
-      status TEXT DEFAULT 'active',
-      created_at TEXT DEFAULT (datetime('now')),
-      updated_at TEXT DEFAULT (datetime('now')),
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS time_entries (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      job_name TEXT NOT NULL,
-      job_type TEXT NOT NULL,
-      date TEXT NOT NULL,
-      hours REAL NOT NULL,
-      notes TEXT,
-      created_at TEXT DEFAULT (datetime('now')),
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS ai_insights (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      type TEXT NOT NULL,
-      message TEXT NOT NULL,
-      severity TEXT DEFAULT 'info',
-      is_read INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT (datetime('now')),
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
-  `);
-
-  console.log("✅ Database initialized");
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("MongoDB connected successfully");
+  } catch (err) {
+    console.error("MongoDB connection error:", err);
+    process.exit(1);
+  }
 }

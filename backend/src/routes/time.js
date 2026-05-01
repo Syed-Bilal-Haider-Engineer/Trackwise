@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { v4 as uuid } from "uuid";
 import { requireAuth } from "../middleware/auth.js";
-import { getDB } from "../models/db.js";
+import User from "../models/User.js";
+import TimeEntry from "../models/TimeEntry.js";
 
 const router = Router();
 
@@ -9,7 +9,7 @@ const router = Router();
 const RULES = {
   student: {
     max_full_days_per_year: 140,
-    full_day_threshold: 4, // hours >= 4 = full day
+    full_day_threshold: 4,
     half_day_hours: 4,
   },
   mini_job: {
@@ -32,7 +32,6 @@ function computeStats(entries, jobType) {
   const totalHoursYear = yearEntries.reduce((s, e) => s + e.hours, 0);
   const totalHoursMonth = monthEntries.reduce((s, e) => s + e.hours, 0);
 
-  // Student-specific: count full days and half days
   let fullDays = 0;
   let halfDays = 0;
   if (jobType === "student") {
@@ -53,102 +52,81 @@ function computeStats(entries, jobType) {
 }
 
 // Get all time entries
-router.get("/", requireAuth, (req, res) => {
-  const db = getDB();
+router.get("/", requireAuth, async (req, res) => {
   const { month, year } = req.query;
-  const user = db.prepare("SELECT job_type FROM users WHERE id = ?").get(req.userId);
+  const user = await User.findById(req.userId).select("job_type").lean();
 
-  let query = "SELECT * FROM time_entries WHERE user_id = ?";
-  const params = [req.userId];
-
+  const filter = { user_id: req.userId };
   if (year && month) {
-    query += " AND strftime('%Y', date) = ? AND strftime('%m', date) = ?";
-    params.push(year, month.padStart(2, "0"));
+    filter.date = new RegExp(`^${year}-${String(month).padStart(2, "0")}-`);
   } else if (year) {
-    query += " AND strftime('%Y', date) = ?";
-    params.push(year);
+    filter.date = new RegExp(`^${year}-`);
   }
 
-  query += " ORDER BY date DESC";
-  const entries = db.prepare(query).all(...params);
+  const [entriesDocs, allEntriesDocs] = await Promise.all([
+    TimeEntry.find(filter).sort({ date: -1, created_at: -1 }),
+    TimeEntry.find({ user_id: req.userId }),
+  ]);
 
-  const allEntries = db
-    .prepare("SELECT * FROM time_entries WHERE user_id = ?")
-    .all(req.userId);
-
+  const entries = entriesDocs.map((d) => d.toJSON());
+  const allEntries = allEntriesDocs.map((d) => d.toJSON());
   const stats = computeStats(allEntries, user?.job_type || "student");
 
   res.json({ entries, stats });
 });
 
 // Add time entry
-router.post("/", requireAuth, (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   const { job_name, job_type, date, hours, notes } = req.body;
   if (!job_name || !date || !hours) {
     return res.status(400).json({ error: "job_name, date, and hours are required" });
   }
 
-  const db = getDB();
-  const id = uuid();
-  db.prepare(
-    "INSERT INTO time_entries (id, user_id, job_name, job_type, date, hours, notes) VALUES (?, ?, ?, ?, ?, ?, ?)"
-  ).run(id, req.userId, job_name, job_type || "student", date, parseFloat(hours), notes || null);
+  const entry = await TimeEntry.create({
+    user_id: req.userId,
+    job_name,
+    job_type: job_type || "student",
+    date,
+    hours: Number(hours),
+    notes: notes || null,
+  });
 
-  const entry = db.prepare("SELECT * FROM time_entries WHERE id = ?").get(id);
-  res.status(201).json({ entry });
+  res.status(201).json({ entry: entry.toJSON() });
 });
 
 // Update time entry
-router.patch("/:id", requireAuth, (req, res) => {
-  const db = getDB();
-  const entry = db
-    .prepare("SELECT * FROM time_entries WHERE id = ? AND user_id = ?")
-    .get(req.params.id, req.userId);
+router.patch("/:id", requireAuth, async (req, res) => {
+  const entry = await TimeEntry.findOne({ _id: req.params.id, user_id: req.userId });
   if (!entry) return res.status(404).json({ error: "Entry not found" });
 
   const { job_name, job_type, date, hours, notes } = req.body;
-  db.prepare(
-    "UPDATE time_entries SET job_name = ?, job_type = ?, date = ?, hours = ?, notes = ? WHERE id = ? AND user_id = ?"
-  ).run(
-    job_name || entry.job_name,
-    job_type || entry.job_type,
-    date || entry.date,
-    hours !== undefined ? parseFloat(hours) : entry.hours,
-    notes !== undefined ? notes : entry.notes,
-    req.params.id,
-    req.userId
-  );
+  if (job_name !== undefined) entry.job_name = job_name;
+  if (job_type !== undefined) entry.job_type = job_type;
+  if (date !== undefined) entry.date = date;
+  if (hours !== undefined) entry.hours = Number(hours);
+  if (notes !== undefined) entry.notes = notes;
 
-  const updated = db.prepare("SELECT * FROM time_entries WHERE id = ?").get(req.params.id);
-  res.json({ entry: updated });
+  await entry.save();
+  res.json({ entry: entry.toJSON() });
 });
 
 // Delete time entry
-router.delete("/:id", requireAuth, (req, res) => {
-  const db = getDB();
-  const entry = db
-    .prepare("SELECT * FROM time_entries WHERE id = ? AND user_id = ?")
-    .get(req.params.id, req.userId);
-  if (!entry) return res.status(404).json({ error: "Entry not found" });
-
-  db.prepare("DELETE FROM time_entries WHERE id = ? AND user_id = ?").run(
-    req.params.id,
-    req.userId
-  );
+router.delete("/:id", requireAuth, async (req, res) => {
+  const deleted = await TimeEntry.findOneAndDelete({ _id: req.params.id, user_id: req.userId });
+  if (!deleted) return res.status(404).json({ error: "Entry not found" });
   res.json({ success: true });
 });
 
 // Summary endpoint
-router.get("/summary", requireAuth, (req, res) => {
-  const db = getDB();
-  const user = db.prepare("SELECT job_type FROM users WHERE id = ?").get(req.userId);
-  const allEntries = db
-    .prepare("SELECT * FROM time_entries WHERE user_id = ?")
-    .all(req.userId);
+router.get("/summary", requireAuth, async (req, res) => {
+  const [user, allEntriesDocs] = await Promise.all([
+    User.findById(req.userId).select("job_type").lean(),
+    TimeEntry.find({ user_id: req.userId }),
+  ]);
 
+  const allEntries = allEntriesDocs.map((d) => d.toJSON());
   const stats = computeStats(allEntries, user?.job_type || "student");
 
-  // Per-job breakdown this month
   const now = new Date();
   const monthEntries = allEntries.filter((e) => {
     const d = new Date(e.date);
