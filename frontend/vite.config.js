@@ -7,13 +7,13 @@ export default defineConfig({
     port: 3000,
     proxy: {
       "/api": {
-        target: "http://localhost:4000",
+        target: "http://localhost:5000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
   },
   define: {
-    __API_URL__: JSON.stringify(process.env.VITE_API_URL || "http://localhost:4000"),
+    __API_URL__: JSON.stringify(process.env.VITE_API_URL || "http://localhost:5000/api"),
   },
 });

@@ -26,6 +26,7 @@ router.post("/register", async (req, res) => {
     });
 
     const token = signToken(user.id);
+    console.log(`New user registered: ${email} (${user.id})`);
     res.status(201).json({ token, user: user.toJSON() });
   } catch (err) {
     res.status(500).json({ error: err.message });

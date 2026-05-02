@@ -41,10 +41,10 @@ app.get("/health", (req, res) => {
 });
 
 // Routes
-app.use("/auth", authRouter);
-app.use("/documents", documentsRouter);
-app.use("/time", timeRouter);
-app.use("/ai", aiRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/documents", documentsRouter);
+app.use("/api/time", timeRouter);
+app.use("/api/ai", aiRouter);
 
 // Static uploads
 app.use("/uploads", express.static(path.join(__dirname, "../app/uploads")));

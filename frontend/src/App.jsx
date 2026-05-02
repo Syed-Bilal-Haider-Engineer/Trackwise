@@ -10,13 +10,13 @@ import AiPage from "./pages/AiPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 
 function ProtectedRoute({ children }) {
-  // const { user, loading } = useAuth();
-  // if (loading) return (
-  //   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" }}>
-  //     <div className="spinner" />
-  //   </div>
-  // );
-  // if (!user) return <Navigate to="/login" replace />;
+  const { user, loading } = useAuth();
+  if (loading) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" }}>
+      <div className="spinner" />
+    </div>
+  );
+  if (!user) return <Navigate to="/login" replace />;
   return children;
 }
 

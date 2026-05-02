@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 function getToken() {
   return localStorage.getItem("tw_token");
@@ -11,12 +11,12 @@ async function request(path, options = {}) {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {}),
   };
-
+ console.log("API Request:", API_URL, path, options);
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers,
   });
-
+console.log("API Response:", res);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
   return data;
